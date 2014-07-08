@@ -163,7 +163,7 @@ public final class Logger {
 	 * @param msg
 	 * @return
 	 */
-	private static String parseLog(String level, String tag, String msg) {
+	private synchronized static String parseLog(String level, String tag, String msg) {
 		StringBuilder log = new StringBuilder();
 		log.append(level).append("\t");
 		log.append(dateFormat.format(new Date(System.currentTimeMillis()))).append("\t");

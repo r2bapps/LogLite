@@ -13,6 +13,8 @@ import android.widget.Toast;
 
 public class MainActivity extends FragmentActivity {
 
+	final static int SIZE = 100000;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -73,14 +75,14 @@ public class MainActivity extends FragmentActivity {
 					
 					final long init = System.currentTimeMillis();
 					
-					for(int i = 0; i < 100000; i++) {
+					for(int i = 0; i < SIZE; i++) {
 						Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
 					}
 					
 					final long end = System.currentTimeMillis();
 									
 					
-					// flush continuo 65905, 61600
+					// size[100000] 61600
 					
 					getActivity().runOnUiThread(new Runnable() {
                         @Override
@@ -97,7 +99,7 @@ public class MainActivity extends FragmentActivity {
 				@Override
 				public void run() {
 					
-					for(int i = 0; i < 100000; i++) {
+					for(int i = 0; i < SIZE; i++) {
 						Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
 					}
 					
@@ -115,7 +117,7 @@ public class MainActivity extends FragmentActivity {
 				@Override
 				public void run() {
 					
-					for(int i = 0; i < 100000; i++) {
+					for(int i = 0; i < SIZE; i++) {
 						Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
 					}
 					
@@ -133,7 +135,7 @@ public class MainActivity extends FragmentActivity {
 				@Override
 				public void run() {
 					
-					for(int i = 0; i < 100000; i++) {
+					for(int i = 0; i < SIZE; i++) {
 						Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
 					}
 					

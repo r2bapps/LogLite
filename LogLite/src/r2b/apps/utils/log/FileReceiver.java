@@ -47,7 +47,13 @@ import android.util.Log;
  */
 public class FileReceiver {
 	
+	/**
+	 * Log file extension.
+	 */
 	private static final String FILE_EXTENSION = ".log";
+	/**
+	 * Default dir name.
+	 */
 	private static final String DEFAULT_DIRECTORY_NAME = "LogLite";
 	
 	/**
@@ -70,7 +76,9 @@ public class FileReceiver {
 	 * Shared buffer between threads.
 	 */
 	private StringBuilder buffer;
-	
+	/**
+	 * Initialized flag.
+	 */
 	private boolean initialized;
 	
 	/**
