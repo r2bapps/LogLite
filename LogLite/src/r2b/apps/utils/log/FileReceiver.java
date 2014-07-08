@@ -32,6 +32,7 @@
 
 package r2b.apps.utils.log;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -41,6 +42,9 @@ import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
 
+/**
+ * Buffered and thread-safe file logger.
+ */
 public class FileReceiver {
 	
 	private static final String FILE_EXTENSION = ".log";
@@ -82,19 +86,23 @@ public class FileReceiver {
 					
 					while(buffer.length() == 0 && !exit) {
 						try {
-							stick.wait();
+							
+							synchronized (stick) {
+								stick.wait();
+							}							
+							
 						} catch (InterruptedException e) {
 							Log.e(this.getClass().getSimpleName(), e.toString());
 						}
 					}
 					
 					String bf = popBuffer();
-					printer.write(bf);  
-					printer.flush();
+					printer.write(bf);  					
 					
 				}
 				
 				// End
+				printer.flush();
 				printer.close();
 				context = null;				
 				
@@ -161,7 +169,7 @@ public class FileReceiver {
 		initialized = false;
 		
 		if( isStorageReady() ) {
-			createExternalStorageLogFile();
+			createExternalStorageLogFile();			
 			
 			buffer = new StringBuilder();		
 			buffer.setLength(0);
@@ -200,7 +208,9 @@ public class FileReceiver {
 		File file = hasExternalStorageLogFile();
 		if( file != null) {
 			try {
-				printer = new PrintWriter( new FileWriter(file, true) );
+				FileWriter fw = new FileWriter (file, true);
+				BufferedWriter bw = new BufferedWriter (fw);
+				printer = new PrintWriter( bw );
 			} catch (IOException e) {
 				Log.e(this.getClass().getSimpleName(), e.toString());
 			}
