@@ -13,7 +13,7 @@ import android.widget.Toast;
 
 public class MainActivity extends FragmentActivity {
 
-	final static int SIZE = 100000;
+	final static int SIZE = 100;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -54,100 +54,153 @@ public class MainActivity extends FragmentActivity {
 					false);
 			return rootView;
 		}
-
+		
+		Thread t = new Thread() {
+			@Override
+			public void run() {
+														
+				
+				getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                    	Toast.makeText(getActivity(), "Start", Toast.LENGTH_LONG).show();
+                    }
+				});
+				
+				final long init = System.currentTimeMillis();
+				
+				for(int i = 0; i < SIZE; i++) {
+					Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
+				}
+				
+				final long end = System.currentTimeMillis();
+								
+				
+				// size[100000] 61600
+				
+				getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                    	Toast.makeText(getActivity(), "Stop(t1): " + String.valueOf((end-init)), Toast.LENGTH_LONG).show();
+                    }
+				});
+			}
+		};
+		Thread t2 = new Thread() {
+			@Override
+			public void run() {
+				
+				for(int i = 0; i < SIZE; i++) {
+					Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
+				}
+				
+				getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                    	Toast.makeText(getActivity(), "Stop t2", Toast.LENGTH_LONG).show();
+                    }
+				});
+			}
+		};
+		Thread t3 = new Thread() {
+			@Override
+			public void run() {
+				
+				for(int i = 0; i < SIZE; i++) {
+					Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
+				}
+				
+				getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                    	Toast.makeText(getActivity(), "Stop t3", Toast.LENGTH_LONG).show();
+                    }
+				});
+			}
+		};
+		Thread t4 = new Thread() {
+			@Override
+			public void run() {
+				
+				for(int i = 0; i < SIZE; i++) {
+					Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
+				}
+				
+				getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                    	Toast.makeText(getActivity(), "Stop t4", Toast.LENGTH_LONG).show();
+                    }
+				});
+			}
+		};
+		Thread t5 = new Thread() {
+			@Override
+			public void run() {
+				
+				for(int i = 0; i < SIZE; i++) {
+					Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
+				}
+				
+				getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                    	Toast.makeText(getActivity(), "Stop t5", Toast.LENGTH_LONG).show();
+                    }
+				});
+			}
+		};
+		Thread t6 = new Thread() {
+			@Override
+			public void run() {
+				
+				for(int i = 0; i < SIZE; i++) {
+					Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
+				}
+				
+				getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                    	Toast.makeText(getActivity(), "Stop t6", Toast.LENGTH_LONG).show();
+                    }
+				});
+			}
+		};
+		Thread t7 = new Thread() {
+			@Override
+			public void run() {
+				
+				for(int i = 0; i < SIZE; i++) {
+					Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
+				}
+				
+				getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                    	Toast.makeText(getActivity(), "Stop t7", Toast.LENGTH_LONG).show();
+                    }
+				});
+			}
+		};		
 		@Override
 		public void onResume() {
 			super.onResume();
 			
 			Logger.init(getActivity());
 			
-			Thread t = new Thread() {
-				@Override
-				public void run() {
-															
-					
-					getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                        	Toast.makeText(getActivity(), "Start", Toast.LENGTH_LONG).show();
-                        }
-					});
-					
-					final long init = System.currentTimeMillis();
-					
-					for(int i = 0; i < SIZE; i++) {
-						Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
-					}
-					
-					final long end = System.currentTimeMillis();
-									
-					
-					// size[100000] 61600
-					
-					getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                        	Toast.makeText(getActivity(), "Stop(t1): " + String.valueOf((end-init)), Toast.LENGTH_LONG).show();
-                        }
-					});
-				}
-			};
 			t.start();
+						
+			t2.start();			
+
+			t3.start();		
+
+			t4.start();
 			
+			t5.start();			
 			
-			Thread t2 = new Thread() {
-				@Override
-				public void run() {
-					
-					for(int i = 0; i < SIZE; i++) {
-						Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
-					}
-					
-					getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                        	Toast.makeText(getActivity(), "Stop t2", Toast.LENGTH_LONG).show();
-                        }
-					});
-				}
-			};
-			t2.start();
+			t6.start();			
 			
-			Thread t3 = new Thread() {
-				@Override
-				public void run() {
-					
-					for(int i = 0; i < SIZE; i++) {
-						Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
-					}
-					
-					getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                        	Toast.makeText(getActivity(), "Stop t3", Toast.LENGTH_LONG).show();
-                        }
-					});
-				}
-			};
-			t3.start();
-			
-			Thread t4 = new Thread() {
-				@Override
-				public void run() {
-					
-					for(int i = 0; i < SIZE; i++) {
-						Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
-					}
-					
-					getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                        	Toast.makeText(getActivity(), "Stop t4", Toast.LENGTH_LONG).show();
-                        }
-					});
-				}
-			};
-			t4.start();			
+			t7.start();			
 
 		}
 		

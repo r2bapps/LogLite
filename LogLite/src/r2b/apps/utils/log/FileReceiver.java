@@ -86,42 +86,40 @@ public class FileReceiver {
 	 */
 	private final Thread worker = new Thread() {
 		@Override
-		public void run() {
+		public void run() {					
 			
-			if(init()) {
-			
-				while(!exit) {
-					
-					while(buffer.length() == 0 && !exit) {
-						try {
-							
-							synchronized (stick) {
-								stick.wait();
-							}							
-							
-						} catch (InterruptedException e) {
-							Log.e(this.getClass().getSimpleName(), e.toString());
-						}
+			while(!exit) {
+				
+				while(buffer.length() == 0 && !exit) {
+					try {
+						
+						synchronized (stick) {
+							stick.wait();
+						}							
+						
+					} catch (InterruptedException e) {
+						Log.e(this.getClass().getSimpleName(), e.toString());
 					}
-					
-					String bf = popBuffer();
-					printer.write(bf);  					
-					
 				}
 				
-				// End
-				printer.flush();
-				printer.close();
-				context = null;				
+				String bf = popBuffer();
+				printer.write(bf);  					
 				
 			}
+			
+			// End
+			printer.flush();
+			printer.close();
+			context = null;								
 			
 		}
 	};
 
 	public FileReceiver(final Context context) {				
 		this.context = context.getApplicationContext();
-		worker.start();		
+		if(init()) {
+			worker.start();
+		}
 	}
 
 	public void close() {
