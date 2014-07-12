@@ -2,6 +2,7 @@ package r2b.apps.utils.log.test;
 
 import r2b.apps.utils.log.Logger;
 import r2b.apps.utils.log.R;
+import r2b.apps.utils.log.RemoteReceiver;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -31,7 +32,7 @@ public class MainActivity extends FragmentActivity {
 	
 	@Override
 	protected void onDestroy() {
-		Logger.close();
+//		Logger.close();
 		
 		super.onDestroy();
 	}
@@ -58,32 +59,34 @@ public class MainActivity extends FragmentActivity {
 		Thread t = new Thread() {
 			@Override
 			public void run() {
-														
 				
-				getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                    	Toast.makeText(getActivity(), "Start", Toast.LENGTH_LONG).show();
-                    }
-				});
+				RemoteReceiver.send(getActivity());									
 				
-				final long init = System.currentTimeMillis();
+//				getActivity().runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                    	Toast.makeText(getActivity(), "Start", Toast.LENGTH_LONG).show();
+//                    }
+//				});
+//				
+//				final long init = System.currentTimeMillis();
+//				
+//				for(int i = 0; i < SIZE; i++) {
+//					Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
+//				}
+//				
+//				final long end = System.currentTimeMillis();
+//								
+//				
+//				// size[100000] 61600
+//				
+//				getActivity().runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                    	Toast.makeText(getActivity(), "Stop(t1): " + String.valueOf((end-init)), Toast.LENGTH_LONG).show();
+//                    }
+//				});				
 				
-				for(int i = 0; i < SIZE; i++) {
-					Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
-				}
-				
-				final long end = System.currentTimeMillis();
-								
-				
-				// size[100000] 61600
-				
-				getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                    	Toast.makeText(getActivity(), "Stop(t1): " + String.valueOf((end-init)), Toast.LENGTH_LONG).show();
-                    }
-				});
 			}
 		};
 		Thread t2 = new Thread() {
@@ -190,17 +193,17 @@ public class MainActivity extends FragmentActivity {
 			
 			t.start();
 						
-			t2.start();			
-
-			t3.start();		
-
-			t4.start();
-			
-			t5.start();			
-			
-			t6.start();			
-			
-			t7.start();			
+//			t2.start();			
+//
+//			t3.start();		
+//
+//			t4.start();
+//			
+//			t5.start();			
+//			
+//			t6.start();			
+//			
+//			t7.start();			
 
 		}
 		

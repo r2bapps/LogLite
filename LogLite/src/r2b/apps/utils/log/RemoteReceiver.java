@@ -33,20 +33,16 @@
 package r2b.apps.utils.log;
 
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.List;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.InputStreamEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-
+import r2b.apps.utils.log.test.MainActivity;
 import android.content.Context;
 import android.os.Environment;
+import android.util.Log;
+import android.widget.Toast;
 
 public class RemoteReceiver {
-	
-	private FileReceiver receiver;
 	
 	/**
 	 * Log file extension.
@@ -57,62 +53,73 @@ public class RemoteReceiver {
 	 */
 	private static final String DEFAULT_DIRECTORY_NAME = "LogLite";
 	
-	/**
-	 * Worker thread
-	 */
-	private final Thread worker = new Thread() {
-		@Override
-		public void run() {													
+	
+	public static void send(final Context context) {
+		
+
 			
-		}
-	};
 
-	public RemoteReceiver(final Context context) {				
-		receiver = new FileReceiver(context);
-	}
-
-	public void close() {
-		receiver.close();
-	}
-	
-	public void v(String msg) {
-		receiver.v(msg);
-	}
-	
-	public void d(String msg) {
-		receiver.d(msg);
-	}		
-	
-	public void i(String msg) {
-		receiver.i(msg);
-	}
-	
-	public void e(String msg) {
-		receiver.e(msg);
-	}
-	
-	private void send() {
-		
-		String url = "http://yourserver";
-		
-		File file = new File(Environment.getExternalStorageDirectory(), "yourfile");
-		
-		try {
-		    HttpClient httpclient = new DefaultHttpClient();
-		    HttpPost post = new HttpPost(url);
-
-		    MultipartEntity entity = new MultipartEntity();
-
-            File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString() + "/Camera/Test.jpg");
-            entity.addPart("picture", new FileBody(file));
-
-            post.setEntity(entity);
-            HttpResponse response = httpclient.execute(post);
-		    //Do something with response...
-
-		} catch (Exception e) {
-		    // show error
-		}
+		int stringId = context.getApplicationInfo().labelRes;
+	    String appName = context.getString(stringId);
+	    if(appName == null) {
+	    	appName = DEFAULT_DIRECTORY_NAME;
+	    }
+	    else {
+	    	appName = appName.replaceAll("\\s+",""); // Replace whitespaces and non visible characteres	    	
+	    }
+	    File sdCard = Environment.getExternalStorageDirectory();  
+	    File root = new File (sdCard.getAbsolutePath() + File.separator + appName);  
+			
+			
+			String charset = "UTF-8";
+	        final File uploadFile1 = new File(root, appName + FILE_EXTENSION);
+	        String requestURL = "http://192.168.0.194:8080/LogLiteUploadServer/UploadDownloadFileServlet";
+	 
+	        
+			((MainActivity)context).runOnUiThread(new Runnable() {
+		         public void run() {
+		          	Toast.makeText(context, "File: " + uploadFile1.getAbsolutePath(), Toast.LENGTH_LONG).show();
+		         }
+				});	
+			
+	        try {
+	            MultipartUtility multipart = new MultipartUtility(requestURL, charset);
+	             
+//	            multipart.addHeaderField("User-Agent", "CodeJava");
+//	            multipart.addHeaderField("Test-Header", "Header-Value");
+	             
+//	            multipart.addFormField("description", "Cool Pictures");
+//	            multipart.addFormField("keywords", "Java,upload,Spring");
+	             
+	            multipart.addFilePart("fileUpload", uploadFile1);
+	 
+	            List<String> response = multipart.finish();
+	             
+	            Log.i(RemoteReceiver.class.getSimpleName(), "SERVER REPLIED:");
+	            
+	            final StringBuilder buffer= new StringBuilder();
+	            for (String line : response) {
+	                buffer.append(line);
+	            }
+	            
+	            Log.i(RemoteReceiver.class.getSimpleName(), buffer.toString());
+	            
+	    		((MainActivity)context).runOnUiThread(new Runnable() {
+	    	         public void run() {
+	    	          	Toast.makeText(context, "SERVER REPLIED: " + buffer.toString() , Toast.LENGTH_LONG).show();
+	    	         }
+	    			});	
+	            
+	        } catch (final IOException e) {
+	    		((MainActivity)context).runOnUiThread(new Runnable() {
+	    	         public void run() {
+	    	          	Toast.makeText(context, "Error: " + e.toString() , Toast.LENGTH_LONG).show();
+	    	         }
+	    			});	
+	        	Log.e(RemoteReceiver.class.getSimpleName(), e.toString());
+	        }
+	        	
+        
 	}
 	
 }
