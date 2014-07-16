@@ -34,92 +34,90 @@ package r2b.apps.utils.log;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
-import r2b.apps.utils.log.test.MainActivity;
+import r2b.apps.utils.Cons;
+import r2b.apps.utils.StringUtils;
+import r2b.apps.utils.Utils;
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.os.Environment;
 import android.util.Log;
-import android.widget.Toast;
 
 public class RemoteReceiver {
 	
+	/**
+	 * Default charset.
+	 */
+	private static final String DEFAULT_CHARSET = "UTF-8";
 	/**
 	 * Log file extension.
 	 */
 	private static final String FILE_EXTENSION = ".log";
 	/**
-	 * Default dir name.
+	 * Default file name.
 	 */
-	private static final String DEFAULT_DIRECTORY_NAME = "LogLite";
+	private static final String DEFAULT_FILE_NAME = "LogLite";
+	/**
+	 *  File receiver.
+	 */
+	private FileReceiver fileReceiver; 
+	/**
+	 * Server URL.
+	 */
+	private String requestURL;
 	
-	
-	public static void send(final Context context) {
-		
-
-			
-
-		int stringId = context.getApplicationInfo().labelRes;
-	    String appName = context.getString(stringId);
-	    if(appName == null) {
-	    	appName = DEFAULT_DIRECTORY_NAME;
+	@SuppressLint("SimpleDateFormat") 
+	public RemoteReceiver(Context context, String requestURL) {
+		this.requestURL = requestURL;
+		String fileName = Utils.getApplicationName(context);
+	    if(fileName == null) {
+	    	fileName = DEFAULT_FILE_NAME;
 	    }
 	    else {
-	    	appName = appName.replaceAll("\\s+",""); // Replace whitespaces and non visible characteres	    	
+	    	fileName = StringUtils.
+	    			replaceAllWithespacesAndNonVisibleCharacteres(fileName);	    	
 	    }
-	    File sdCard = Environment.getExternalStorageDirectory();  
-	    File root = new File (sdCard.getAbsolutePath() + File.separator + appName);  
+	    
+	    SimpleDateFormat sdf = new SimpleDateFormat("_yyyyMMdd_HHmmss_"); 
+	    String timestamp = sdf.format((new Date(System.currentTimeMillis())));
+	    
+		fileReceiver = new FileReceiver(context, fileName + timestamp + FILE_EXTENSION);
+	}
+
+	
+	public void send() {		
 			
-			
-			String charset = "UTF-8";
-	        final File uploadFile1 = new File(root, appName + FILE_EXTENSION);
-	        String requestURL = "http://192.168.0.194:8080/LogLiteUploadServer/UploadDownloadFileServlet";
-	 
-	        
-			((MainActivity)context).runOnUiThread(new Runnable() {
-		         public void run() {
-		          	Toast.makeText(context, "File: " + uploadFile1.getAbsolutePath(), Toast.LENGTH_LONG).show();
-		         }
-				});	
-			
-	        try {
-	            MultipartUtility multipart = new MultipartUtility(requestURL, charset);
-	             
-//	            multipart.addHeaderField("User-Agent", "CodeJava");
-//	            multipart.addHeaderField("Test-Header", "Header-Value");
-	             
-//	            multipart.addFormField("description", "Cool Pictures");
-//	            multipart.addFormField("keywords", "Java,upload,Spring");
-	             
-	            multipart.addFilePart("fileUpload", uploadFile1);
-	 
-	            List<String> response = multipart.finish();
-	             
-	            Log.i(RemoteReceiver.class.getSimpleName(), "SERVER REPLIED:");
-	            
-	            final StringBuilder buffer= new StringBuilder();
-	            for (String line : response) {
-	                buffer.append(line);
-	            }
-	            
-	            Log.i(RemoteReceiver.class.getSimpleName(), buffer.toString());
-	            
-	    		((MainActivity)context).runOnUiThread(new Runnable() {
-	    	         public void run() {
-	    	          	Toast.makeText(context, "SERVER REPLIED: " + buffer.toString() , Toast.LENGTH_LONG).show();
-	    	         }
-	    			});	
-	            
-	        } catch (final IOException e) {
-	    		((MainActivity)context).runOnUiThread(new Runnable() {
-	    	         public void run() {
-	    	          	Toast.makeText(context, "Error: " + e.toString() , Toast.LENGTH_LONG).show();
-	    	         }
-	    			});	
-	        	Log.e(RemoteReceiver.class.getSimpleName(), e.toString());
-	        }
-	        	
-        
+		fileReceiver.close();
+		
+        File uploadFile = new File(fileReceiver.getCurrentFileAbsolutePath());
+		
+        try {
+            MultipartUtility multipart = 
+            		new MultipartUtility(this.requestURL, DEFAULT_CHARSET);
+             
+            multipart.addFilePart("fileUpload", uploadFile);
+ 
+            // TODO CHANGE IT
+            List<String> response = multipart.finish();
+            
+            if(Cons.DEBUG) {
+            	
+                final StringBuilder buffer = new StringBuilder();
+                
+                for (String line : response) {
+                    buffer.append(line);
+                }
+                
+                Log.i(RemoteReceiver.class.getSimpleName(), 
+                		"Server response: \n" + buffer.toString());
+            }
+            
+        } catch (final IOException e) {
+        	Log.e(RemoteReceiver.class.getSimpleName(), e.toString());
+        }
+	        	        
 	}
 	
 }

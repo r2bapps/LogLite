@@ -38,12 +38,18 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import r2b.apps.utils.FileUtils;
+import r2b.apps.utils.StringUtils;
+import r2b.apps.utils.Utils;
 import android.content.Context;
-import android.os.Environment;
 import android.util.Log;
 
 /**
  * Buffered and thread-safe file logger.
+ * 
+ * Store all logs on a directory called like the app and 
+ * a file called like app with .log extension, inside 
+ * it folder.
  */
 public class FileReceiver {
 	
@@ -80,6 +86,14 @@ public class FileReceiver {
 	 * Initialized flag.
 	 */
 	private boolean initialized;
+	/**
+	 * Current opened file.
+	 */
+	private File currentFile;
+	/**
+	 * File name.
+	 */
+	private String fileName;
 	
 	/**
 	 * Worker thread
@@ -117,6 +131,14 @@ public class FileReceiver {
 
 	public FileReceiver(final Context context) {				
 		this.context = context.getApplicationContext();
+		if(init()) {
+			worker.start();
+		}
+	}
+	
+	public FileReceiver(final Context context, String fileName) {				
+		this.context = context.getApplicationContext();
+		this.fileName = fileName;
 		if(init()) {
 			worker.start();
 		}
@@ -174,87 +196,81 @@ public class FileReceiver {
 		
 		initialized = false;
 		
-		if( isStorageReady() ) {
-			createExternalStorageLogFile();			
-			
+		currentFile = FileUtils.createInternalStorageFile(context, fileName);
+		
+		if( setupPrinter() ) {
 			buffer = new StringBuilder();		
 			buffer.setLength(0);
 			stick = new Object();
 			
-			initialized = true;
-		
+			initialized = true;				
+		}
+		else if( FileUtils.isExternalStorageReady() ) {
+			createExternalStorageLogFile();		
+			
+			if( setupPrinter() ) {
+				buffer = new StringBuilder();		
+				buffer.setLength(0);
+				stick = new Object();
+				
+				initialized = true;				
+			}
+				
 		}		
 		else {
 			context = null;			
 		}
-		
+				
 		return initialized;
-		
-	}
-	
-	private boolean isStorageReady() {
-		
-		final String externalStorageState = Environment.getExternalStorageState();
-		boolean isStorageReady = false;
-		
-		if ( Environment.MEDIA_MOUNTED.equals( externalStorageState ) ) {
-		    // We can read and write the media
-			isStorageReady = true;
-		} 
-		else {
-			Log.i(this.getClass().getSimpleName(), "Storage not ready to save logs.");
-		}
-		
-		return isStorageReady;
 		
 	}
 	
 	private void createExternalStorageLogFile() {
 
-		File file = hasExternalStorageLogFile();
-		if( file != null) {
-			try {
-				FileWriter fw = new FileWriter (file, true);
-				BufferedWriter bw = new BufferedWriter (fw);
-				printer = new PrintWriter( bw );
-			} catch (IOException e) {
-				Log.e(this.getClass().getSimpleName(), e.toString());
-			}
-		}
-	    
-	}
-	
-	private File hasExternalStorageLogFile() {
-		
-		int stringId = context.getApplicationInfo().labelRes;
-	    String appName = context.getString(stringId);
+		String appName = Utils.getApplicationName(context);
 	    if(appName == null) {
 	    	appName = DEFAULT_DIRECTORY_NAME;
 	    }
 	    else {
-	    	appName = appName.replaceAll("\\s+",""); // Replace whitespaces and non visible characteres	    	
+	    	appName = StringUtils.replaceAllWithespacesAndNonVisibleCharacteres(appName);	    	
 	    }
-	    	    
-	    // Create a path where we will place our file on external storage
-	    File sdCard = Environment.getExternalStorageDirectory();  
-	    File root = new File (sdCard.getAbsolutePath() + File.separator + appName);  
-		if(!root.exists()) {
-			root.mkdirs();
-		}
+	    
+	    if(fileName == null) {
+			currentFile = FileUtils.
+					createExternalStorageFile(
+							context, 
+							appName, 
+							appName + FILE_EXTENSION);
+	    }
+	    else {
+			currentFile = FileUtils.
+					createExternalStorageFile(
+							context, 
+							appName, 
+							fileName);
+	    }
+	    
+	}
+	
+	private boolean setupPrinter() {
+		boolean setup = false;
 		
-	    // Get path for the file on external storage.  If external
-	    // storage is not currently mounted this will fail.
-	    File file = new File(root, appName + FILE_EXTENSION);	   
-	    if(!file.exists()) {
-	    	try {
-				file.createNewFile();
+		if( currentFile != null) {
+			try {
+				FileWriter fw = new FileWriter (currentFile, true);
+				BufferedWriter bw = new BufferedWriter (fw);
+				printer = new PrintWriter( bw );
+				setup = true;
 			} catch (IOException e) {
 				Log.e(this.getClass().getSimpleName(), e.toString());
 			}
-	    }
-	    
-	    return file;
-	  
+		}
+		
+		return setup;
+	}
+	
+	String getCurrentFileAbsolutePath() {
+		return this.currentFile.getAbsolutePath();
 	}
 	
 }
