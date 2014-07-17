@@ -1,7 +1,7 @@
 /*
  * Logger
  * 
- * 0.2
+ * 0.2.5
  * 
  * 2014/05/16
  * 
@@ -61,9 +61,10 @@ public final class Logger {
 	 */
 	private static Context context;	
 	/**
-	 * File logger.
+	 * Receivers to call.
 	 */
-	private static FileReceiver fileReceiver;	
+	private static Receiver [] receivers;
+	
 	/**
 	 * Logcat date format.
 	 */
@@ -82,7 +83,11 @@ public final class Logger {
 	public static void v(String tag, String msg) {
 		if (Cons.DEBUG) {
 			Log.v(tag, msg);
-			fileReceiver.v(parseLog("V", tag, msg));
+			
+			for(Receiver receiver : receivers) {
+				receiver.v(parseLog("V", tag, msg));
+			}
+			
 		}
 	}
 	
@@ -97,7 +102,11 @@ public final class Logger {
 	 */
 	public static void i(String tag, String msg) {
 		Log.i(tag, msg);
-		fileReceiver.i(parseLog("I", tag, msg));
+		
+		for(Receiver receiver : receivers) {
+			receiver.i(parseLog("I", tag, msg));
+		}
+		
 	}
 
 	/**
@@ -112,7 +121,11 @@ public final class Logger {
 	public static void d(String tag, String msg) {
 		if (Cons.DEBUG) {
 			Log.d(tag, msg);
-			fileReceiver.d(parseLog("D", tag, msg));
+			
+			for(Receiver receiver : receivers) {
+				receiver.d(parseLog("D", tag, msg));
+			}
+			
 		}
 	}
 	
@@ -127,7 +140,11 @@ public final class Logger {
 	 */
 	public static void e(String tag, String msg) {
 		Log.e(tag, msg);
-		fileReceiver.e(parseLog("E", tag, msg));
+		
+		for(Receiver receiver : receivers) {
+			receiver.e(parseLog("E", tag, msg));
+		}
+		
 	}
 
 	/**
@@ -143,16 +160,36 @@ public final class Logger {
 	 */
 	public static void e(String tag, String msg, Throwable tr) {
 		Log.e(tag, msg, tr);
-		fileReceiver.e(parseLog("E", tag, msg));
+		
+		for(Receiver receiver : receivers) {
+			receiver.e(parseLog("E", tag, msg));
+		}
+		
 	}
 	
-	public static void init(final Context context) {
+	public static void init(final Context context, Receiver [] receivers) {
 		Logger.context = context.getApplicationContext();
-		fileReceiver = new FileReceiver(Logger.context);
+		
+		if(receivers == null) {
+			Logger.receivers = new Receiver[0];
+		}
+		else {
+			Logger.receivers = new Receiver[receivers.length];
+			
+			for(int i = 0; i < receivers.length; i++) {
+				Logger.receivers [i] = receivers [i];
+			}
+		}
+		
 	}
 	
 	public static void close() {
-		fileReceiver.close();
+		
+		for(Receiver receiver : receivers) {
+			receiver.close();
+		}
+		
+		Logger.receivers = null;
 		Logger.context = null;
 	}
 	

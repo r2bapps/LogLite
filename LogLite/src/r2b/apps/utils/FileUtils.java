@@ -33,7 +33,10 @@
 package r2b.apps.utils;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 
 import android.content.Context;
 import android.os.Environment;
@@ -105,6 +108,32 @@ public class FileUtils {
 	public static File createInternalStorageFile(Context context, String fileName) {
 		File file = new File(context.getFilesDir(), fileName);
 		return file;
+	}
+	
+	public static void copy(final File src, File dst) {		
+		try {
+		    FileInputStream inStream = new FileInputStream(src);
+		    FileOutputStream outStream = new FileOutputStream(dst);
+		    FileChannel inChannel = inStream.getChannel();
+		    FileChannel outChannel = outStream.getChannel();
+		    inChannel.transferTo(0, inChannel.size(), outChannel);
+		    inStream.close();
+		    outStream.close();
+		}
+		catch (IOException e) {
+			Log.e(FileUtils.class.getSimpleName(), e.toString());
+		}
+	}
+	
+	public static String getFilePath(final File file) {
+		return getFilePath(file.getAbsolutePath());
+	}
+	
+	public static String getFilePath(String absolutePath) {
+		String filePath = absolutePath.
+			    substring(0, absolutePath.lastIndexOf(File.separator));
+		
+		return filePath;
 	}
 
 }

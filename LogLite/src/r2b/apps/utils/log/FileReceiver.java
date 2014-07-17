@@ -1,7 +1,7 @@
 /*
  * FileReceiver
  * 
- * 0.1
+ * 0.2
  * 
  * 2014/07/05
  * 
@@ -51,7 +51,7 @@ import android.util.Log;
  * a file called like app with .log extension, inside 
  * it folder.
  */
-public class FileReceiver {
+public class FileReceiver implements Receiver {
 	
 	/**
 	 * Log file extension.
@@ -61,7 +61,6 @@ public class FileReceiver {
 	 * Default dir name.
 	 */
 	private static final String DEFAULT_DIRECTORY_NAME = "LogLite";
-	
 	/**
 	 * Thread stick.
 	 */
@@ -132,6 +131,7 @@ public class FileReceiver {
 	public FileReceiver(final Context context) {				
 		this.context = context.getApplicationContext();
 		if(init()) {
+			Log.d(this.getClass().getSimpleName(), "Initialized");
 			worker.start();
 		}
 	}
@@ -140,32 +140,50 @@ public class FileReceiver {
 		this.context = context.getApplicationContext();
 		this.fileName = fileName;
 		if(init()) {
+			Log.d(this.getClass().getSimpleName(), "Initialized");
 			worker.start();
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see r2b.apps.utils.log.Receiver#close()
+	 */
 	public void close() {
 		if(initialized) {
 			exit = true;
 			synchronized (stick) {
 			    stick.notify();
 			}
-			initialized = false;	
+			initialized = false;
+			
+			Log.d(this.getClass().getSimpleName(), "Closed");
 		}
 	}
 	
+	/* (non-Javadoc)
+	 * @see r2b.apps.utils.log.Receiver#v(java.lang.String)
+	 */
 	public void v(String msg) {
 		print(msg);
 	}
 	
+	/* (non-Javadoc)
+	 * @see r2b.apps.utils.log.Receiver#d(java.lang.String)
+	 */
 	public void d(String msg) {
 		print(msg);
 	}		
 	
+	/* (non-Javadoc)
+	 * @see r2b.apps.utils.log.Receiver#i(java.lang.String)
+	 */
 	public void i(String msg) {
 		print(msg);
 	}
 	
+	/* (non-Javadoc)
+	 * @see r2b.apps.utils.log.Receiver#e(java.lang.String)
+	 */
 	public void e(String msg) {
 		print(msg);
 	}
@@ -194,11 +212,22 @@ public class FileReceiver {
 	
 	private boolean init() {
 		
-		initialized = false;
+		if(fileName == null) {
+			fileName = Utils.getApplicationName(context);
+		    if(fileName == null) {
+		    	fileName = DEFAULT_DIRECTORY_NAME;
+		    }
+		    else {
+		    	fileName = StringUtils.
+		    			replaceAllWithespacesAndNonVisibleCharacteres(fileName);	    	
+		    }
+		    
+		    fileName += FILE_EXTENSION;
+		}
 		
 		currentFile = FileUtils.createInternalStorageFile(context, fileName);
 		
-		if( setupPrinter() ) {
+		if( setupPrinter() ) {			
 			buffer = new StringBuilder();		
 			buffer.setLength(0);
 			stick = new Object();
@@ -206,7 +235,21 @@ public class FileReceiver {
 			initialized = true;				
 		}
 		else if( FileUtils.isExternalStorageReady() ) {
-			createExternalStorageLogFile();		
+			
+			String dirName = Utils.getApplicationName(context);
+		    if(dirName == null) {
+		    	dirName = DEFAULT_DIRECTORY_NAME;
+		    }
+		    else {
+		    	dirName = StringUtils.
+		    			replaceAllWithespacesAndNonVisibleCharacteres(dirName);	    	
+		    }
+		    
+			currentFile = FileUtils.
+					createExternalStorageFile(
+							context, 
+							dirName, 
+							fileName);	
 			
 			if( setupPrinter() ) {
 				buffer = new StringBuilder();		
@@ -223,33 +266,6 @@ public class FileReceiver {
 				
 		return initialized;
 		
-	}
-	
-	private void createExternalStorageLogFile() {
-
-		String appName = Utils.getApplicationName(context);
-	    if(appName == null) {
-	    	appName = DEFAULT_DIRECTORY_NAME;
-	    }
-	    else {
-	    	appName = StringUtils.replaceAllWithespacesAndNonVisibleCharacteres(appName);	    	
-	    }
-	    
-	    if(fileName == null) {
-			currentFile = FileUtils.
-					createExternalStorageFile(
-							context, 
-							appName, 
-							appName + FILE_EXTENSION);
-	    }
-	    else {
-			currentFile = FileUtils.
-					createExternalStorageFile(
-							context, 
-							appName, 
-							fileName);
-	    }
-	    
 	}
 	
 	private boolean setupPrinter() {
@@ -269,8 +285,8 @@ public class FileReceiver {
 		return setup;
 	}
 	
-	String getCurrentFileAbsolutePath() {
-		return this.currentFile.getAbsolutePath();
+	final File getCurrentFile() {
+		return this.currentFile;
 	}
 	
 }
