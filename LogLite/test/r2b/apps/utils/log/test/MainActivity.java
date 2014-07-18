@@ -218,7 +218,7 @@ public class MainActivity extends FragmentActivity {
 			receivers[0] = fileReceiver;
 			receivers[1] = remoteReceiver;
 			
-			Logger.init(getActivity(), receivers);
+			Logger.init(getActivity(), null);
 			
 			t.start();
 						

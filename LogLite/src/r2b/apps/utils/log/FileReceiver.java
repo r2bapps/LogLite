@@ -251,7 +251,7 @@ public class FileReceiver implements Receiver {
 		    fileName += FILE_EXTENSION;
 		}
 		
-		//currentFile = FileUtils.createInternalStorageFile(context, fileName);
+		currentFile = FileUtils.createInternalStorageFile(context, fileName);
 		
 		if( setupPrinter() ) {			
 			buffer = new StringBuilder();		
