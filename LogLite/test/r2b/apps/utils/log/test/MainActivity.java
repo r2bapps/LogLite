@@ -193,6 +193,8 @@ public class MainActivity extends FragmentActivity {
 					Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
 				}
 				
+				Logger.e(this.getClass().getSimpleName(), "Error");
+				
 				getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -205,12 +207,12 @@ public class MainActivity extends FragmentActivity {
 		public void onResume() {
 			super.onResume();
 			
-			FileReceiver fileReceiver = new FileReceiver(getActivity());
+			FileReceiver fileReceiver = new FileReceiver(getActivity(), null, true, true);
 			
 			// TODO url
 			String url = "http://192.168.0.195:8080/LogLiteUploadServer/UploadDownloadFileServlet";
 			
-			RemoteReceiver remoteReceiver = new RemoteReceiver(getActivity(), url, fileReceiver);
+			RemoteReceiver remoteReceiver = new RemoteReceiver(getActivity(), url, fileReceiver, true);
 			
 			Receiver [] receivers = new Receiver[2];
 			receivers[0] = fileReceiver;

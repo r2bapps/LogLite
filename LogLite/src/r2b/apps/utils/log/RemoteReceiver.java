@@ -48,12 +48,20 @@ import android.content.Context;
 import android.provider.Settings;
 import android.util.Log;
 
+/**
+ * 
+ * Send logs to a file receiver and when close send this file
+ * to the server. 
+ * 
+ * It can send the file compressed.
+ *
+ */
 public class RemoteReceiver implements Receiver {
 	
 	/**
 	 * Flag to indicate that must compress the file before send it.
 	 */
-	private static final boolean compression = true;
+	private static final boolean COMPRESSION = true;
 	/**
 	 * File form field name.
 	 */
@@ -94,10 +102,39 @@ public class RemoteReceiver implements Receiver {
 	 * Initialized flag.
 	 */
 	private boolean initialized;
+	/**
+	 * Flag to know if 'e' call was doing.
+	 */
+	private static boolean eCalled;		
+	/**
+	 * Flag to know if an 'e' call make to send logs.
+	 */
+	private boolean sendOnlyOnError;
 	
+	/**
+	 * Create a remote receiver to send log file to a server.
+	 * 
+	 * To improve performance it is recommended to use an 
+	 * existing file receiver to reduce IO calls. 
+	 * 
+	 * If you use an existing receiver take care about APPEND 
+	 * info flag on the file receiver. With APPEND enabled you 
+	 * send all old logs on each close. With APPEND disabled you
+	 * only send the current execution logs.
+	 *  
+	 * If you not use an existing receiver on each close you 
+	 * only send the current execution logs.
+	 * 
+	 * @param context Application context.
+	 * @param requestURL The server url to send files.
+	 * @param fileReceiver Use this receiver to store logs 
+	 * (recommended), null create new one. 
+	 * @param sendOnlyOnError True send log only when 'e' is call. False allways.
+	 */
 	@SuppressLint("SimpleDateFormat") 
-	public RemoteReceiver(Context context, String requestURL, final FileReceiver fileReceiver) {
+	public RemoteReceiver(Context context, String requestURL, final FileReceiver fileReceiver, boolean sendOnlyOnError) {
 		this.requestURL = requestURL;	
+		this.sendOnlyOnError = sendOnlyOnError;
 		
 		String fileName = Utils.getApplicationName(context);
 	    if(fileName == null) {
@@ -116,7 +153,7 @@ public class RemoteReceiver implements Receiver {
 	    
 	    this.fileNameToUpload = fileName + timestamp + id;
 	    
-	    if(compression) {
+	    if(COMPRESSION) {
 	    	this.fileNameToUpload += ZIP_FILE_EXTENSION;
 	    }
 	    else {
@@ -124,11 +161,11 @@ public class RemoteReceiver implements Receiver {
 	    }
 	    
 	    if(fileReceiver == null) {
-	    	 if(compression) {
-	    		 this.fileReceiver = new FileReceiver(context);	
+	    	 if(COMPRESSION) {
+	    		 this.fileReceiver = new FileReceiver(context, null, true, true);	
 	    	 }
 	    	 else {
-	    		 this.fileReceiver = new FileReceiver(context, this.fileNameToUpload);	
+	    		 this.fileReceiver = new FileReceiver(context, this.fileNameToUpload, true, true);	
 	    	 }
 	    }
 	    else {
@@ -142,6 +179,13 @@ public class RemoteReceiver implements Receiver {
 		
 	}
 	
+	/**
+	 * @return sendOnlyOnError
+	 */
+	public boolean isSendOnlyOnError() {
+		return sendOnlyOnError;
+	}
+
 	/* (non-Javadoc)
 	 * @see r2b.apps.utils.log.Receiver#v(java.lang.String)
 	 */
@@ -176,49 +220,62 @@ public class RemoteReceiver implements Receiver {
 		if(!this.externalReceiver) {
 			fileReceiver.e(msg);
 		}
+		
+		eCalled = true;
 	}
 	
 	/* (non-Javadoc)
 	 * @see r2b.apps.utils.log.Receiver#close()
 	 */
-	public void close() {
+	public synchronized void close() {
 		if(initialized) {
 			fileReceiver.close();
 			
-			File uploadFile = null;
-			
-			if(externalReceiver) {
-				if(compression) {
-					uploadFile = compress(fileReceiver.getCurrentFile().
-							getAbsolutePath(), false);
-				}
-				else {
-					File src = fileReceiver.getCurrentFile();
-					uploadFile = new File( FileUtils.getFilePath(src) 
-								+ File.separator + fileNameToUpload);
-					FileUtils.copy(src, uploadFile);
-				}
+			// No send and remove file if no 'e' call was doing.
+			if(sendOnlyOnError && !eCalled) {
+				FileUtils.removeFile(fileReceiver.getCurrentFile().getAbsolutePath());
+				
+				Log.d(this.getClass().getSimpleName(), "Closed not sending files");
 			}
 			else {
-				if(compression) {
-					uploadFile = compress(fileReceiver.getCurrentFile().
-							getAbsolutePath(), true);
+				
+				File uploadFile = null;
+				
+				if(externalReceiver) {
+					if(COMPRESSION) {
+						uploadFile = compress(fileReceiver.getCurrentFile().
+								getAbsolutePath(), false);
+					}
+					else {
+						File src = fileReceiver.getCurrentFile();
+						uploadFile = new File( FileUtils.getFilePath(src) 
+									+ File.separator + fileNameToUpload);
+						FileUtils.copy(src, uploadFile);
+					}
 				}
 				else {
-					uploadFile = fileReceiver.getCurrentFile();
-				}
-			}			
-			
-			send(uploadFile);
-        		
-			// Delete the copy or the file of the internal receiver
-			if(uploadFile.delete()) {    		
-				Log.d(this.getClass().getSimpleName(), "Deleted temp file");
+					if(COMPRESSION) {
+						uploadFile = compress(fileReceiver.getCurrentFile().
+								getAbsolutePath(), true);
+					}
+					else {
+						uploadFile = fileReceiver.getCurrentFile();
+					}
+				}			
+				
+				send(uploadFile);
+	        		
+				// Delete the copy or the file of the internal receiver
+				if(uploadFile.delete()) {    		
+					Log.d(this.getClass().getSimpleName(), "Deleted temp file");
+				}	
+				
+				Log.d(this.getClass().getSimpleName(), "Closed");
+				
 			}
 			
 			initialized = false;	
-			
-			Log.d(this.getClass().getSimpleName(), "Closed");
+
 		}
 	}
 	

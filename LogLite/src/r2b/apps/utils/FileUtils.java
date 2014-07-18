@@ -38,9 +38,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 
+import r2b.apps.utils.log.Logger;
 import android.content.Context;
 import android.os.Environment;
-import android.util.Log;
 
 /**
  * File utility helper.
@@ -61,7 +61,7 @@ public final class FileUtils {
 			isStorageReady = true;
 		} 
 		else {
-			Log.i(FileUtils.class.getSimpleName(), 
+			Logger.i(FileUtils.class.getSimpleName(), 
 					"External storage not ready to save logs.");
 		}
 		
@@ -92,7 +92,7 @@ public final class FileUtils {
 	    	try {
 				file.createNewFile();
 			} catch (IOException e) {
-				Log.e(FileUtils.class.getSimpleName(), e.toString());
+				Logger.e(FileUtils.class.getSimpleName(), e.toString());
 			}
 	    }
 	    
@@ -127,7 +127,7 @@ public final class FileUtils {
 		    outStream.close();
 		}
 		catch (IOException e) {
-			Log.e(FileUtils.class.getSimpleName(), e.toString());
+			Logger.e(FileUtils.class.getSimpleName(), e.toString());
 		}
 	}
 	
@@ -190,7 +190,7 @@ public final class FileUtils {
 				boolean deleted = fileToDelete.delete();
 				
 	        	if (!deleted) {
-	        		Log.i(FileUtils.class.getSimpleName(), 
+	        		Logger.i(FileUtils.class.getSimpleName(), 
 	        				"The file '" + absolutePath + "' can not be deleted");
 	        	}
 	        	

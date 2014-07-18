@@ -47,9 +47,9 @@ import android.util.Log;
 /**
  * Buffered and thread-safe file logger.
  * 
- * Store all logs on a directory called like the app and 
- * a file called like app with .log extension, inside 
- * it folder.
+ * With APPEND enabled you maintain all old logs 
+ * on each close. With APPEND disabled you only 
+ * maintain the current execution logs.
  */
 public class FileReceiver implements Receiver {
 	
@@ -64,7 +64,7 @@ public class FileReceiver implements Receiver {
 	/**
 	 * Flag to indicate to append info to the file. False to overwrite.
 	 */
-	private static final boolean append = true;
+	private static boolean APPEND = true;
 	/**
 	 * Thread stick.
 	 */
@@ -97,6 +97,14 @@ public class FileReceiver implements Receiver {
 	 * File name.
 	 */
 	private String fileName;
+	/**
+	 * Flag to know if 'e' call was doing.
+	 */
+	private static boolean eCalled;	
+	/**
+	 * Flag to know if an 'e' call make to maintain logs.
+	 */
+	private boolean storeOnlyOnError;
 	
 	/**
 	 * Worker thread
@@ -131,28 +139,29 @@ public class FileReceiver implements Receiver {
 			
 		}
 	};
-
-	public FileReceiver(final Context context) {				
+	
+	public FileReceiver(final Context context, String fileName, boolean append, boolean storeOnlyOnError) {				
 		this.context = context.getApplicationContext();
+		this.fileName = fileName;
+		FileReceiver.APPEND = append;
+		this.storeOnlyOnError = storeOnlyOnError;
 		if(init()) {
 			Log.d(this.getClass().getSimpleName(), "Initialized");
 			worker.start();
 		}
 	}
-	
-	public FileReceiver(final Context context, String fileName) {				
-		this.context = context.getApplicationContext();
-		this.fileName = fileName;
-		if(init()) {
-			Log.d(this.getClass().getSimpleName(), "Initialized");
-			worker.start();
-		}
+
+	/**
+	 * @return storeOnlyOnError
+	 */
+	public boolean isStoreOnlyOnError() {
+		return storeOnlyOnError;
 	}
 
 	/* (non-Javadoc)
 	 * @see r2b.apps.utils.log.Receiver#close()
 	 */
-	public void close() {
+	public synchronized void close() {
 		if(initialized) {
 			exit = true;
 			synchronized (stick) {
@@ -160,7 +169,18 @@ public class FileReceiver implements Receiver {
 			}
 			initialized = false;
 			
-			Log.d(this.getClass().getSimpleName(), "Closed");
+			
+			
+			// Remove file if no 'e' call was doing.
+			if(storeOnlyOnError && !eCalled) {
+				FileUtils.removeFile(currentFile.getAbsolutePath());
+				
+				Log.d(this.getClass().getSimpleName(), "Closed deleting files");
+			}
+			else {
+				Log.d(this.getClass().getSimpleName(), "Closed");
+			}
+			
 		}
 	}
 	
@@ -190,6 +210,8 @@ public class FileReceiver implements Receiver {
 	 */
 	public void e(String msg) {
 		print(msg);
+				
+		eCalled = true;
 	}
 
 	private void print(String msg) {
@@ -229,7 +251,7 @@ public class FileReceiver implements Receiver {
 		    fileName += FILE_EXTENSION;
 		}
 		
-		currentFile = FileUtils.createInternalStorageFile(context, fileName);
+		//currentFile = FileUtils.createInternalStorageFile(context, fileName);
 		
 		if( setupPrinter() ) {			
 			buffer = new StringBuilder();		
@@ -277,7 +299,7 @@ public class FileReceiver implements Receiver {
 		
 		if( currentFile != null) {
 			try {
-				FileWriter fw = new FileWriter (currentFile, append);
+				FileWriter fw = new FileWriter (currentFile, APPEND);
 				BufferedWriter bw = new BufferedWriter (fw);
 				printer = new PrintWriter( bw );
 				setup = true;

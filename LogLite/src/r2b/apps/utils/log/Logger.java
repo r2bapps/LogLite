@@ -144,7 +144,6 @@ public final class Logger {
 		for(Receiver receiver : receivers) {
 			receiver.e(parseLog("E", tag, msg));
 		}
-		
 	}
 
 	/**
@@ -164,7 +163,6 @@ public final class Logger {
 		for(Receiver receiver : receivers) {
 			receiver.e(parseLog("E", tag, msg));
 		}
-		
 	}
 	
 	public static void init(final Context context, Receiver [] receivers) {
