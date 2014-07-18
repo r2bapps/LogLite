@@ -34,6 +34,7 @@ package r2b.apps.utils.log;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
 import r2b.apps.utils.Cons;
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -63,7 +64,11 @@ public final class Logger {
 	/**
 	 * Receivers to call.
 	 */
-	private static Receiver [] receivers;
+	private static Receiver [] receivers = new Receiver[0];
+	/**
+	 * Initialized flag.
+	 */
+	private static boolean initialized;
 	
 	/**
 	 * Logcat date format.
@@ -168,10 +173,7 @@ public final class Logger {
 	public static void init(final Context context, Receiver [] receivers) {
 		Logger.context = context.getApplicationContext();
 		
-		if(receivers == null) {
-			Logger.receivers = new Receiver[0];
-		}
-		else {
+		if(receivers != null) {
 			Logger.receivers = new Receiver[receivers.length];
 			
 			for(int i = 0; i < receivers.length; i++) {
@@ -179,16 +181,29 @@ public final class Logger {
 			}
 		}
 		
+		initialized = true;
 	}
 	
 	public static void close() {
-		
-		for(Receiver receiver : receivers) {
-			receiver.close();
+		if(initialized) {
+			
+			Thread worker = new Thread() {
+				
+				@Override
+				public void run() {											
+					for(Receiver receiver : receivers) {
+						receiver.close();
+					}
+					
+					Logger.receivers = null;
+					Logger.context = null;
+				}
+			};
+			
+			worker.start();
+			
+			initialized = false;
 		}
-		
-		Logger.receivers = null;
-		Logger.context = null;
 	}
 	
 	/**
