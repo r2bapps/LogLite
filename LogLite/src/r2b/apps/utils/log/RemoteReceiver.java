@@ -42,6 +42,7 @@ import r2b.apps.utils.Cons;
 import r2b.apps.utils.FileUtils;
 import r2b.apps.utils.StringUtils;
 import r2b.apps.utils.Utils;
+import r2b.apps.utils.ZipUtils;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.provider.Settings;
@@ -49,6 +50,10 @@ import android.util.Log;
 
 public class RemoteReceiver implements Receiver {
 	
+	/**
+	 * Flag to indicate that must compress the file before send it.
+	 */
+	private static final boolean compression = true;
 	/**
 	 * File form field name.
 	 */
@@ -61,6 +66,10 @@ public class RemoteReceiver implements Receiver {
 	 * Log file extension.
 	 */
 	private static final String FILE_EXTENSION = ".log";
+	/**
+	 * Log compressed file extension.
+	 */
+	private static final String ZIP_FILE_EXTENSION = ".zip";	
 	/**
 	 * Default file name.
 	 */
@@ -105,7 +114,14 @@ public class RemoteReceiver implements Receiver {
 	    final String id = Settings.Secure
         		.getString(context.getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
 	    
-	    this.fileNameToUpload = fileName + timestamp + id + FILE_EXTENSION;
+	    this.fileNameToUpload = fileName + timestamp + id;
+	    
+	    if(compression) {
+	    	this.fileNameToUpload += ZIP_FILE_EXTENSION;
+	    }
+	    else {
+	    	this.fileNameToUpload += FILE_EXTENSION;
+	    }
 	    
 	    if(fileReceiver == null) {
 		    // appName_timestamp_androidId.log
@@ -176,14 +192,19 @@ public class RemoteReceiver implements Receiver {
 	private void send() {		
 		File uploadFile;
 		
-		if(fileReceiver.getCurrentFile().getName().equals(fileNameToUpload)) {
-			uploadFile = fileReceiver.getCurrentFile();
+		if(compression) {
+			uploadFile = compress();
 		}
 		else {
-			File src = fileReceiver.getCurrentFile();
-			uploadFile = new File( FileUtils.getFilePath(src) 
-						+ File.separator + fileNameToUpload);
-			FileUtils.copy(src, uploadFile);
+			if(fileReceiver.getCurrentFile().getName().equals(fileNameToUpload)) {
+				uploadFile = fileReceiver.getCurrentFile();
+			}
+			else {
+				File src = fileReceiver.getCurrentFile();
+				uploadFile = new File( FileUtils.getFilePath(src) 
+							+ File.separator + fileNameToUpload);
+				FileUtils.copy(src, uploadFile);
+			}			
 		}		       
 		
         try {
@@ -222,6 +243,16 @@ public class RemoteReceiver implements Receiver {
         	}
         }
 	        	        
+	}
+	
+	private File compress() {
+		// Compress file on zip and delete them.
+		File zip = new File(FileUtils.getFilePath(fileReceiver.getCurrentFile()) 
+				+ File.separator + fileNameToUpload);
+		
+		ZipUtils.zip(zip, fileReceiver.getCurrentFile().getAbsolutePath(), true);
+		
+		return zip;
 	}
 	
 }

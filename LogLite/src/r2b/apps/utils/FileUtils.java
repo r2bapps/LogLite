@@ -45,7 +45,7 @@ import android.util.Log;
 /**
  * File utility helper.
  */
-public class FileUtils {
+public final class FileUtils {
 	
 	/**
 	 * Check if external storage is ready to read and write.
@@ -61,7 +61,8 @@ public class FileUtils {
 			isStorageReady = true;
 		} 
 		else {
-			Log.i(FileUtils.class.getSimpleName(), "External storage not ready to save logs.");
+			Log.i(FileUtils.class.getSimpleName(), 
+					"External storage not ready to save logs.");
 		}
 		
 		return isStorageReady;
@@ -110,6 +111,11 @@ public class FileUtils {
 		return file;
 	}
 	
+	/**
+	 * Copy src to dst.
+	 * @param src Source file.
+	 * @param dst Destination file.
+	 */
 	public static void copy(final File src, File dst) {		
 		try {
 		    FileInputStream inStream = new FileInputStream(src);
@@ -125,15 +131,72 @@ public class FileUtils {
 		}
 	}
 	
+	/**
+	 * Get the file path without the file name.
+	 * @param file The file.
+	 * @return The file path.
+	 */
 	public static String getFilePath(final File file) {
 		return getFilePath(file.getAbsolutePath());
 	}
 	
-	public static String getFilePath(String absolutePath) {
+	/**
+	 * Get the file path without the file name.
+	 * @param absolutePath The absolute path of the file.
+	 * @return The file path.
+	 */
+	public synchronized static String getFilePath(final String absolutePath) {
 		String filePath = absolutePath.
 			    substring(0, absolutePath.lastIndexOf(File.separator));
 		
 		return filePath;
+	}
+	
+	/**
+	 * Get the file name from absolute path.
+	 * @param absolutePath The absolute path.
+	 * @return The file name.
+	 */
+	public static String getFileName(String absolutePath) {
+		return absolutePath.substring(absolutePath.lastIndexOf(File.separator) + 1);
+	}
+	
+	/**
+	 * Removes files from absolute paths.
+	 * @param absolutePath The array of absolute paths to remove.
+	 */
+	public static void removeFiles(final String[] absolutePaths) {
+		
+		if(absolutePaths != null) {
+			for (String path : absolutePaths) {
+				removeFile(path);
+			}	
+		}
+	  
+	}
+	
+	/**
+	 * Removes a file from an absolute path.
+	 * @param absolutePath The absolute path to remove.
+	 */
+	public synchronized static void removeFile(final String absolutePath) {
+		
+		if(absolutePath != null) {
+		    File fileToDelete = new File(absolutePath);
+		    if (fileToDelete != null && 
+		    		fileToDelete.exists() && 
+		    		fileToDelete.isFile()) {
+		    	
+				boolean deleted = fileToDelete.delete();
+				
+	        	if (!deleted) {
+	        		Log.i(FileUtils.class.getSimpleName(), 
+	        				"The file '" + absolutePath + "' can not be deleted");
+	        	}
+	        	
+			}
+		}	  
+		
 	}
 
 }
