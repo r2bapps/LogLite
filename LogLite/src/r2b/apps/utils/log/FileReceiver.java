@@ -62,6 +62,10 @@ public class FileReceiver implements Receiver {
 	 */
 	private static final String DEFAULT_DIRECTORY_NAME = "LogLite";
 	/**
+	 * Flag to indicate to append info to the file. False to overwrite.
+	 */
+	private static final boolean append = true;
+	/**
 	 * Thread stick.
 	 */
 	private Object stick;
@@ -273,7 +277,7 @@ public class FileReceiver implements Receiver {
 		
 		if( currentFile != null) {
 			try {
-				FileWriter fw = new FileWriter (currentFile, true);
+				FileWriter fw = new FileWriter (currentFile, append);
 				BufferedWriter bw = new BufferedWriter (fw);
 				printer = new PrintWriter( bw );
 				setup = true;

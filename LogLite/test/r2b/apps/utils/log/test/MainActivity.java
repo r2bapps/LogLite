@@ -16,7 +16,7 @@ import android.widget.Toast;
 
 public class MainActivity extends FragmentActivity {
 
-	final static int SIZE = 100;
+	final static int SIZE = 10;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {

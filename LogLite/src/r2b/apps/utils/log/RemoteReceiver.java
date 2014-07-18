@@ -124,8 +124,12 @@ public class RemoteReceiver implements Receiver {
 	    }
 	    
 	    if(fileReceiver == null) {
-		    // appName_timestamp_androidId.log
-	    	this.fileReceiver = new FileReceiver(context, fileNameToUpload);	
+	    	 if(compression) {
+	    		 this.fileReceiver = new FileReceiver(context);	
+	    	 }
+	    	 else {
+	    		 this.fileReceiver = new FileReceiver(context, this.fileNameToUpload);	
+	    	 }
 	    }
 	    else {
 	    	this.externalReceiver = true;
@@ -181,7 +185,36 @@ public class RemoteReceiver implements Receiver {
 		if(initialized) {
 			fileReceiver.close();
 			
-			send();
+			File uploadFile = null;
+			
+			if(externalReceiver) {
+				if(compression) {
+					uploadFile = compress(fileReceiver.getCurrentFile().
+							getAbsolutePath(), false);
+				}
+				else {
+					File src = fileReceiver.getCurrentFile();
+					uploadFile = new File( FileUtils.getFilePath(src) 
+								+ File.separator + fileNameToUpload);
+					FileUtils.copy(src, uploadFile);
+				}
+			}
+			else {
+				if(compression) {
+					uploadFile = compress(fileReceiver.getCurrentFile().
+							getAbsolutePath(), true);
+				}
+				else {
+					uploadFile = fileReceiver.getCurrentFile();
+				}
+			}			
+			
+			send(uploadFile);
+        		
+			// Delete the copy or the file of the internal receiver
+			if(uploadFile.delete()) {    		
+				Log.d(this.getClass().getSimpleName(), "Deleted temp file");
+			}
 			
 			initialized = false;	
 			
@@ -189,24 +222,8 @@ public class RemoteReceiver implements Receiver {
 		}
 	}
 	
-	private void send() {		
-		File uploadFile;
-		
-		if(compression) {
-			uploadFile = compress();
-		}
-		else {
-			if(fileReceiver.getCurrentFile().getName().equals(fileNameToUpload)) {
-				uploadFile = fileReceiver.getCurrentFile();
-			}
-			else {
-				File src = fileReceiver.getCurrentFile();
-				uploadFile = new File( FileUtils.getFilePath(src) 
-							+ File.separator + fileNameToUpload);
-				FileUtils.copy(src, uploadFile);
-			}			
-		}		       
-		
+	private void send(File uploadFile) {		
+		      
         try {
             // TODO CHANGE IT
             MultipartUtility multipart = 
@@ -233,24 +250,16 @@ public class RemoteReceiver implements Receiver {
         catch (IOException e) {
         	Log.e(RemoteReceiver.class.getSimpleName(), e.toString());
         } 
-        finally {
-        	if(uploadFile != null) {
-        		
-        		if(uploadFile.delete()) {
-            		Log.d(this.getClass().getSimpleName(), "Deleted temp file");
-        		}
-        		
-        	}
-        }
 	        	        
 	}
 	
-	private File compress() {
+	private File compress(String absolutePath, boolean removeUncompressed) {
 		// Compress file on zip and delete them.
-		File zip = new File(FileUtils.getFilePath(fileReceiver.getCurrentFile()) 
+		File zip = new File(FileUtils.
+				getFilePath(fileReceiver.getCurrentFile()) 
 				+ File.separator + fileNameToUpload);
 		
-		ZipUtils.zip(zip, fileReceiver.getCurrentFile().getAbsolutePath(), true);
+		ZipUtils.zip(zip, absolutePath, removeUncompressed);
 		
 		return zip;
 	}
