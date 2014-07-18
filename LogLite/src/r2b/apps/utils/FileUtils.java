@@ -43,7 +43,7 @@ import android.content.Context;
 import android.os.Environment;
 
 /**
- * File utility helper.
+ * File utility class.
  */
 public final class FileUtils {
 	

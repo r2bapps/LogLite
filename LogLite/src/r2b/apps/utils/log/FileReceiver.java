@@ -1,7 +1,7 @@
 /*
  * FileReceiver
  * 
- * 0.2
+ * 0.2.5
  * 
  * 2014/07/05
  * 
@@ -311,6 +311,9 @@ public class FileReceiver implements Receiver {
 		return setup;
 	}
 	
+	/**
+	 * @return The current file.
+	 */
 	final File getCurrentFile() {
 		return this.currentFile;
 	}

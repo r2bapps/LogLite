@@ -1,7 +1,7 @@
 /*
  * RemoteReceiver
  * 
- * 0.2
+ * 0.2.5
  * 
  * 2014/07/09
  * 
@@ -40,6 +40,7 @@ import java.util.List;
 
 import r2b.apps.utils.Cons;
 import r2b.apps.utils.FileUtils;
+import r2b.apps.utils.MultipartEntity;
 import r2b.apps.utils.StringUtils;
 import r2b.apps.utils.Utils;
 import r2b.apps.utils.ZipUtils;
@@ -66,10 +67,6 @@ public class RemoteReceiver implements Receiver {
 	 * File form field name.
 	 */
 	private static final String FILE_FORM_FIELD_NAME = "fileUpload";
-	/**
-	 * Default charset.
-	 */
-	private static final String DEFAULT_CHARSET = "UTF-8";
 	/**
 	 * Log file extension.
 	 */
@@ -282,16 +279,13 @@ public class RemoteReceiver implements Receiver {
 	private void send(File uploadFile) {		
 		      
         try {
-            // TODO CHANGE IT
-            MultipartUtility multipart = 
-            		new MultipartUtility(this.requestURL, DEFAULT_CHARSET);
-             
+
+            MultipartEntity multipart = new MultipartEntity(this.requestURL);             
             multipart.addFilePart(FILE_FORM_FIELD_NAME, uploadFile);
  
-            // TODO CHANGE IT
-            List<String> response = multipart.finish();
-            
             if(Cons.DEBUG) {
+            	
+            	List<String> response = multipart.finish();
             	
                 final StringBuilder buffer = new StringBuilder();
                 
@@ -299,8 +293,11 @@ public class RemoteReceiver implements Receiver {
                     buffer.append(line);
                 }
                 
-                Log.i(RemoteReceiver.class.getSimpleName(), 
+                Log.d(RemoteReceiver.class.getSimpleName(), 
                 		"Server response: \n" + buffer.toString());
+            }
+            else {
+            	multipart.finish();
             }
             
         }  
@@ -311,7 +308,7 @@ public class RemoteReceiver implements Receiver {
 	}
 	
 	private File compress(String absolutePath, boolean removeUncompressed) {
-		// Compress file on zip and delete them.
+		// Compress file on zip and delete them if removeUncompressed is true.
 		File zip = new File(FileUtils.
 				getFilePath(fileReceiver.getCurrentFile()) 
 				+ File.separator + fileNameToUpload);
