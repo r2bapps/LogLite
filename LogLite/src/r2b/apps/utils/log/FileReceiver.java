@@ -162,14 +162,14 @@ public class FileReceiver implements Receiver {
 	 * @see r2b.apps.utils.log.Receiver#close()
 	 */
 	public synchronized void close() {
-		if(initialized) {
+		if(initialized) {			
+			
 			exit = true;
 			synchronized (stick) {
 			    stick.notify();
 			}
 			initialized = false;
-			
-			
+						
 			
 			// Remove file if no 'e' call was doing.
 			if(storeOnlyOnError && !eCalled) {
@@ -212,7 +212,7 @@ public class FileReceiver implements Receiver {
 		print(msg);
 				
 		eCalled = true;
-	}
+	}		
 
 	private void print(String msg) {
 		
@@ -251,16 +251,16 @@ public class FileReceiver implements Receiver {
 		    fileName += FILE_EXTENSION;
 		}
 		
-		currentFile = FileUtils.createInternalStorageFile(context, fileName);
+		//currentFile = FileUtils.createInternalStorageFile(context, fileName);
 		
-		if( setupPrinter() ) {			
+		/*if( setupPrinter() ) {			
 			buffer = new StringBuilder();		
 			buffer.setLength(0);
 			stick = new Object();
 			
 			initialized = true;				
 		}
-		else if( FileUtils.isExternalStorageReady() ) {
+		else*/ if( FileUtils.isExternalStorageReady() ) {
 			
 			String dirName = Utils.getApplicationName(context);
 		    if(dirName == null) {

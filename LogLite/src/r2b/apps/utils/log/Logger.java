@@ -53,7 +53,7 @@ import android.util.Log;
  * If you ofuscate your code a good convention is to declare a TAG constant 
  * in your class with the arg tag needed here.
  * 
- * WARNING: ERROR & INFO logs are allways showing on logcat and saving on log file.
+ * WARNING: ERROR & INFO logs are always showing on logcat and saving on log file.
  */
 public final class Logger {
 	
@@ -170,6 +170,26 @@ public final class Logger {
 		}
 	}
 	
+	/**
+	 * Send a INFO log message for performance notice.
+	 * 
+	 * @param tag
+	 *            Used to identify the source of a log message. It usually
+	 *            identifies the class or activity where the log call occurs.
+	 * @param method
+	 *            Used to identify the method of a log performance message.
+	 * @param time
+	 *            The performance time in milliseconds you would like logged.
+	 */
+	public static final void performance(String tag, String method, long time) {
+		i("Performance:" + tag, method + ": " + String.valueOf(time) + " ms");		
+	}	
+	
+	/**
+	 * Initializes all receivers.
+	 * @param context Application context
+	 * @param receivers Receivers array
+	 */
 	public static void init(final Context context, Receiver [] receivers) {
 		Logger.context = context.getApplicationContext();
 		
@@ -184,25 +204,28 @@ public final class Logger {
 		initialized = true;
 	}
 	
+	/**
+	 * Closes all receivers.
+	 */
 	public static void close() {
 		if(initialized) {
+				
+			initialized = false;
 			
 			Thread worker = new Thread() {
-				
 				@Override
-				public void run() {											
+				public void run() {
 					for(Receiver receiver : receivers) {
 						receiver.close();
 					}
 					
-					Logger.receivers = null;
+					Logger.receivers = new Receiver[0];
 					Logger.context = null;
 				}
 			};
 			
-			worker.start();
+			worker.start();		
 			
-			initialized = false;
 		}
 	}
 	

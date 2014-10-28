@@ -1,7 +1,7 @@
 /*
  * Receiver
  * 
- * 0.1
+ * 0.2
  * 
  * 2014/07/17
  * 
@@ -31,6 +31,7 @@
  */
 
 package r2b.apps.utils.log;
+
 
 /**
  * All receivers must have.

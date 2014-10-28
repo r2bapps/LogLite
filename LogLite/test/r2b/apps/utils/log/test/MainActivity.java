@@ -5,13 +5,14 @@ import r2b.apps.utils.log.Logger;
 import r2b.apps.utils.log.R;
 import r2b.apps.utils.log.Receiver;
 import r2b.apps.utils.log.RemoteReceiver;
-import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.Toast;
 
 public class MainActivity extends FragmentActivity {
@@ -27,33 +28,9 @@ public class MainActivity extends FragmentActivity {
 			getSupportFragmentManager().beginTransaction()
 					.add(R.id.container, new PlaceholderFragment()).commit();
 		}
+		
+		
 	}
-	
-	
-
-	
-	@Override
-	protected void onPause() {
-		Thread t = new Thread() {
-			@Override
-			public void run() {
-				Logger.close();
-			}
-		};
-		t.start();
-		
-		try {
-			t.join();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		
-		super.onPause();
-	}
-
-
 
 
 	/**
@@ -69,6 +46,13 @@ public class MainActivity extends FragmentActivity {
 				Bundle savedInstanceState) {
 			View rootView = inflater.inflate(R.layout.fragment_main, container,
 					false);
+			((Button)rootView.findViewById(R.id.btn)).setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					Logger.close();
+				}
+			});
+			
 			return rootView;
 		}
 		
@@ -207,12 +191,12 @@ public class MainActivity extends FragmentActivity {
 		public void onResume() {
 			super.onResume();
 			
-			FileReceiver fileReceiver = new FileReceiver(getActivity(), null, true, true);
+			FileReceiver fileReceiver = new FileReceiver(getActivity(), null, true, false);
 			
 			// TODO url
 			String url = "http://192.168.0.195:8080/LogLiteUploadServer/UploadDownloadFileServlet";
 			
-			RemoteReceiver remoteReceiver = new RemoteReceiver(getActivity(), url, fileReceiver, true);
+			RemoteReceiver remoteReceiver = new RemoteReceiver(getActivity(), url, false);
 			
 			Receiver [] receivers = new Receiver[2];
 			receivers[0] = fileReceiver;

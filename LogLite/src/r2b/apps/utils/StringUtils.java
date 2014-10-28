@@ -43,7 +43,8 @@ public final class StringUtils {
 	 * @return
 	 */
 	public static String replaceAllWithespacesAndNonVisibleCharacteres(final String text) {
-		return text.replaceAll("\\s+",""); 	  
+		String exit = text.replaceAll("\\s+","");
+		return exit;
 	}
 
 }

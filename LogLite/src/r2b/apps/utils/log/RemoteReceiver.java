@@ -46,6 +46,7 @@ import r2b.apps.utils.Utils;
 import r2b.apps.utils.ZipUtils;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.provider.Settings;
 import android.util.Log;
 
@@ -60,17 +61,23 @@ import android.util.Log;
 public class RemoteReceiver implements Receiver {
 	
 	/**
-	 * Flag to indicate that must compress the file before send it.
+	 * Start-up shared preferences to retrieve previous closed.
 	 */
-	private static final boolean COMPRESSION = true;
+	private static final String SHARED_PREFS_PRIVATE_FILE = 
+			"LogLite.Logger.RemoteReceiver";
+	/**
+	 * Shared prefs key
+	 */
+	private static final String ABSSOLUTE_PATH_KEY = 
+			"ABSSOLUTE_PATH_KEY";	
+	/**
+	 * File date format.
+	 */
+	private static final String DATE_FORMAT = "_yyyyMMdd_HHmmss_";
 	/**
 	 * File form field name.
 	 */
 	private static final String FILE_FORM_FIELD_NAME = "fileUpload";
-	/**
-	 * Log file extension.
-	 */
-	private static final String FILE_EXTENSION = ".log";
 	/**
 	 * Log compressed file extension.
 	 */
@@ -107,31 +114,27 @@ public class RemoteReceiver implements Receiver {
 	 * Flag to know if an 'e' call make to send logs.
 	 */
 	private boolean sendOnlyOnError;
+	/**
+	 * Application context.
+	 */
+	private Context context;
 	
 	/**
 	 * Create a remote receiver to send log file to a server.
-	 * 
-	 * To improve performance it is recommended to use an 
-	 * existing file receiver to reduce IO calls. 
-	 * 
-	 * If you use an existing receiver take care about APPEND 
-	 * info flag on the file receiver. With APPEND enabled you 
-	 * send all old logs on each close. With APPEND disabled you
-	 * only send the current execution logs.
 	 *  
-	 * If you not use an existing receiver on each close you 
-	 * only send the current execution logs.
+	 * If you not use an existing receiver on each start you 
+	 * send the previous execution logs.
 	 * 
 	 * @param context Application context.
-	 * @param requestURL The server url to send files.
-	 * @param fileReceiver Use this receiver to store logs 
+	 * @param requestURL The server url to send files. 
 	 * (recommended), null create new one. 
-	 * @param sendOnlyOnError True send log only when 'e' is call. False allways.
+	 * @param sendOnlyOnError True send log only when 'e' is call. False always.
 	 */
 	@SuppressLint("SimpleDateFormat") 
-	public RemoteReceiver(Context context, String requestURL, final FileReceiver fileReceiver, boolean sendOnlyOnError) {
+	public RemoteReceiver(Context context, String requestURL, boolean sendOnlyOnError) {
 		this.requestURL = requestURL;	
 		this.sendOnlyOnError = sendOnlyOnError;
+		this.context = context.getApplicationContext();
 		
 		String fileName = Utils.getApplicationName(context);
 	    if(fileName == null) {
@@ -142,35 +145,21 @@ public class RemoteReceiver implements Receiver {
 	    			replaceAllWithespacesAndNonVisibleCharacteres(fileName);	    	
 	    }
 	    
-	    SimpleDateFormat sdf = new SimpleDateFormat("_yyyyMMdd_HHmmss_"); 
+	    SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT); 
 	    String timestamp = sdf.format((new Date(System.currentTimeMillis())));
 	    
 	    final String id = Settings.Secure
-        		.getString(context.getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
+        		.getString(context.getApplicationContext().getContentResolver(), 
+        				Settings.Secure.ANDROID_ID);
 	    
-	    this.fileNameToUpload = fileName + timestamp + id;
+	    this.fileNameToUpload = fileName + timestamp + id + ZIP_FILE_EXTENSION;
 	    
-	    if(COMPRESSION) {
-	    	this.fileNameToUpload += ZIP_FILE_EXTENSION;
-	    }
-	    else {
-	    	this.fileNameToUpload += FILE_EXTENSION;
-	    }
-	    
-	    if(fileReceiver == null) {
-	    	 if(COMPRESSION) {
-	    		 this.fileReceiver = new FileReceiver(context, null, true, true);	
-	    	 }
-	    	 else {
-	    		 this.fileReceiver = new FileReceiver(context, this.fileNameToUpload, true, true);	
-	    	 }
-	    }
-	    else {
-	    	this.externalReceiver = true;
-	    	this.fileReceiver = fileReceiver;
-	    }
+		this.fileReceiver = new FileReceiver(context, null, true, true);	
 	    
 	    initialized = true;
+	    
+	    // Checks if there are previous closed to send.
+	    checkPreviousClose();
 	    
 	    Log.d(this.getClass().getSimpleName(), "Initialized");
 		
@@ -227,53 +216,57 @@ public class RemoteReceiver implements Receiver {
 	public synchronized void close() {
 		if(initialized) {
 			fileReceiver.close();
+						
+			SharedPreferences prefs = context.
+					getSharedPreferences(SHARED_PREFS_PRIVATE_FILE, 
+							Context.MODE_PRIVATE);
 			
 			// No send and remove file if no 'e' call was doing.
 			if(sendOnlyOnError && !eCalled) {
 				FileUtils.removeFile(fileReceiver.getCurrentFile().getAbsolutePath());
 				
+				prefs.edit().putString(ABSSOLUTE_PATH_KEY, null).commit();
+				
 				Log.d(this.getClass().getSimpleName(), "Closed not sending files");
 			}
-			else {
-				
-				File uploadFile = null;
-				
-				if(externalReceiver) {
-					if(COMPRESSION) {
-						uploadFile = compress(fileReceiver.getCurrentFile().
-								getAbsolutePath(), false);
-					}
-					else {
-						File src = fileReceiver.getCurrentFile();
-						uploadFile = new File( FileUtils.getFilePath(src) 
-									+ File.separator + fileNameToUpload);
-						FileUtils.copy(src, uploadFile);
-					}
-				}
-				else {
-					if(COMPRESSION) {
-						uploadFile = compress(fileReceiver.getCurrentFile().
-								getAbsolutePath(), true);
-					}
-					else {
-						uploadFile = fileReceiver.getCurrentFile();
-					}
-				}			
-				
-				send(uploadFile);
-	        		
-				// Delete the copy or the file of the internal receiver
-				if(uploadFile.delete()) {    		
-					Log.d(this.getClass().getSimpleName(), "Deleted temp file");
-				}	
-				
-				Log.d(this.getClass().getSimpleName(), "Closed");
-				
+			else {			
+				prefs.edit().putString(ABSSOLUTE_PATH_KEY, 
+						fileReceiver.getCurrentFile().getAbsolutePath()).commit();
 			}
 			
-			initialized = false;	
-
+			Log.d(this.getClass().getSimpleName(), "Closed");
+			
+			context = null;
+			initialized = false;
 		}
+	}
+	
+	private void checkPreviousClose() {
+		
+		new Thread(new Runnable() {			
+			@Override
+			public void run() {
+				SharedPreferences prefs = context.
+						getSharedPreferences(SHARED_PREFS_PRIVATE_FILE, 
+								Context.MODE_PRIVATE);
+				String absolutePath = prefs.getString(ABSSOLUTE_PATH_KEY, null);
+				
+				if(absolutePath != null) {
+					File uploadFile = compress(absolutePath, true);		
+					
+					send(uploadFile);
+			    		
+					// Delete the copy or the file of the receiver
+					if(uploadFile.delete()) {    		
+						Log.d(this.getClass().getSimpleName(), "Deleted temp file");
+					}	
+					
+					Log.d(this.getClass().getSimpleName(), "Sent file");
+				}
+								
+			}
+		}).start();		
+				
 	}
 	
 	private void send(File uploadFile) {		
