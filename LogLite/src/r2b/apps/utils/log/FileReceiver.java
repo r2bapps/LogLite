@@ -251,16 +251,16 @@ public class FileReceiver implements Receiver {
 		    fileName += FILE_EXTENSION;
 		}
 		
-		//currentFile = FileUtils.createInternalStorageFile(context, fileName);
+		currentFile = FileUtils.createInternalStorageFile(context, fileName);
 		
-		/*if( setupPrinter() ) {			
+		if( setupPrinter() ) {			
 			buffer = new StringBuilder();		
 			buffer.setLength(0);
 			stick = new Object();
 			
 			initialized = true;				
 		}
-		else*/ if( FileUtils.isExternalStorageReady() ) {
+		else if( FileUtils.isExternalStorageReady() ) {
 			
 			String dirName = Utils.getApplicationName(context);
 		    if(dirName == null) {

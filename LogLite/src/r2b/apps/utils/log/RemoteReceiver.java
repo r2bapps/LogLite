@@ -256,10 +256,12 @@ public class RemoteReceiver implements Receiver {
 					
 					send(uploadFile);
 			    		
-					// Delete the copy or the file of the receiver
+					prefs.edit().putString(ABSSOLUTE_PATH_KEY, null).commit();
+					
+					// Delete the file of the receiver
 					if(uploadFile.delete()) {    		
 						Log.d(this.getClass().getSimpleName(), "Deleted temp file");
-					}	
+					}										
 					
 					Log.d(this.getClass().getSimpleName(), "Sent file");
 				}
