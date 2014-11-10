@@ -17,7 +17,7 @@ import android.widget.Toast;
 
 public class MainActivity extends FragmentActivity {
 
-	final static int SIZE = 10;
+	final static int SIZE = 100;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -70,13 +70,11 @@ public class MainActivity extends FragmentActivity {
 				final long init = System.currentTimeMillis();
 				
 				for(int i = 0; i < SIZE; i++) {
-					Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
+					Logger.i(this.getClass().getSimpleName(), "Thread t:" + String.valueOf(i));
 				}
 				
 				final long end = System.currentTimeMillis();
 								
-				
-				// size[100000] 61600
 				
 				getActivity().runOnUiThread(new Runnable() {
                     @Override
@@ -94,7 +92,7 @@ public class MainActivity extends FragmentActivity {
 			public void run() {
 				
 				for(int i = 0; i < SIZE; i++) {
-					Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
+					Logger.i(this.getClass().getSimpleName(), "Thread t2:" + String.valueOf(i));
 				}
 				
 				getActivity().runOnUiThread(new Runnable() {
@@ -110,7 +108,7 @@ public class MainActivity extends FragmentActivity {
 			public void run() {
 				
 				for(int i = 0; i < SIZE; i++) {
-					Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
+					Logger.i(this.getClass().getSimpleName(), "Thread t3:" + String.valueOf(i));
 				}
 				
 				getActivity().runOnUiThread(new Runnable() {
@@ -126,7 +124,7 @@ public class MainActivity extends FragmentActivity {
 			public void run() {
 				
 				for(int i = 0; i < SIZE; i++) {
-					Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
+					Logger.i(this.getClass().getSimpleName(), "Thread t4:" + String.valueOf(i));
 				}
 				
 				getActivity().runOnUiThread(new Runnable() {
@@ -142,7 +140,7 @@ public class MainActivity extends FragmentActivity {
 			public void run() {
 				
 				for(int i = 0; i < SIZE; i++) {
-					Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
+					Logger.i(this.getClass().getSimpleName(), "Thread t5:" + String.valueOf(i));
 				}
 				
 				getActivity().runOnUiThread(new Runnable() {
@@ -158,7 +156,7 @@ public class MainActivity extends FragmentActivity {
 			public void run() {
 				
 				for(int i = 0; i < SIZE; i++) {
-					Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
+					Logger.i(this.getClass().getSimpleName(), "Thread t6:" + String.valueOf(i));
 				}
 				
 				getActivity().runOnUiThread(new Runnable() {
@@ -174,7 +172,7 @@ public class MainActivity extends FragmentActivity {
 			public void run() {
 				
 				for(int i = 0; i < SIZE; i++) {
-					Logger.i(this.getClass().getSimpleName(), String.valueOf(i));
+					Logger.i(this.getClass().getSimpleName(), "Thread t7:" + String.valueOf(i));
 				}
 				
 				Logger.e(this.getClass().getSimpleName(), "Error");
@@ -191,18 +189,19 @@ public class MainActivity extends FragmentActivity {
 		public void onResume() {
 			super.onResume();
 			
-			FileReceiver fileReceiver = new FileReceiver(getActivity(), null, true, false);
+			String url = "http://192.168.0.195:8080/LogLiteUploadServer/UploadDownloadFileServlet/";
 			
-			// TODO url
-			String url = "http://192.168.0.195:8080/LogLiteUploadServer/UploadDownloadFileServlet";
-			
+			FileReceiver fileReceiver = new FileReceiver(getActivity(), null, false);
+			FileReceiver fileReceiver2 = new FileReceiver(getActivity(), null, false);
 			RemoteReceiver remoteReceiver = new RemoteReceiver(getActivity(), url, false);
+					
 			
-			Receiver [] receivers = new Receiver[2];
+			Receiver [] receivers = new Receiver[3];
 			receivers[0] = fileReceiver;
-			receivers[1] = remoteReceiver;
+			receivers[1] = fileReceiver2;
+			receivers[2] = remoteReceiver;
 			
-			Logger.init(getActivity(), null);
+			Logger.init(getActivity(), receivers);
 			
 			t.start();
 						
@@ -219,6 +218,16 @@ public class MainActivity extends FragmentActivity {
 			t7.start();			
 
 		}
+
+		@Override
+		public void onPause() {
+			// TODO Auto-generated method stub
+			super.onPause();
+			
+			Logger.close();
+		}
+		
+		
 		
 		
 	}

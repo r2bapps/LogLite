@@ -69,7 +69,9 @@ public class RemoteReceiver implements Receiver {
 	 * Shared prefs key
 	 */
 	private static final String ABSSOLUTE_PATH_KEY = 
-			"ABSSOLUTE_PATH_KEY";	
+			"ABSSOLUTE_PATH_KEY";
+	private static final String UPLOAD_NAME_KEY = 
+			"UPLOAD_NAME_KEY";
 	/**
 	 * File date format.
 	 */
@@ -90,10 +92,6 @@ public class RemoteReceiver implements Receiver {
 	 * File receiver.
 	 */
 	private FileReceiver fileReceiver; 
-	/**
-	 * External receiver flag.
-	 */
-	private boolean externalReceiver;
 	/**
 	 * Server URL.
 	 */
@@ -154,12 +152,14 @@ public class RemoteReceiver implements Receiver {
 	    
 	    this.fileNameToUpload = fileName + timestamp + id + ZIP_FILE_EXTENSION;
 	    
-		this.fileReceiver = new FileReceiver(context, null, true, true);	
-	    
-	    initialized = true;
 	    
 	    // Checks if there are previous closed to send.
 	    checkPreviousClose();
+	    
+	    
+		this.fileReceiver = new FileReceiver(context, null, this.sendOnlyOnError);	
+	    
+	    initialized = true;
 	    
 	    Log.d(this.getClass().getSimpleName(), "Initialized");
 		
@@ -176,36 +176,28 @@ public class RemoteReceiver implements Receiver {
 	 * @see r2b.apps.utils.log.Receiver#v(java.lang.String)
 	 */
 	public void v(String msg) {
-		if(!this.externalReceiver) {
-			fileReceiver.v(msg);
-		}
+		fileReceiver.v(msg);
 	}
 	
 	/* (non-Javadoc)
 	 * @see r2b.apps.utils.log.Receiver#d(java.lang.String)
 	 */
 	public void d(String msg) {
-		if(!this.externalReceiver) {
-			fileReceiver.d(msg);
-		}
+		fileReceiver.d(msg);
 	}		
 	
 	/* (non-Javadoc)
 	 * @see r2b.apps.utils.log.Receiver#i(java.lang.String)
 	 */
 	public void i(String msg) {
-		if(!this.externalReceiver) {
-			fileReceiver.i(msg);
-		}
+		fileReceiver.i(msg);
 	}
 	
 	/* (non-Javadoc)
 	 * @see r2b.apps.utils.log.Receiver#e(java.lang.String)
 	 */
 	public void e(String msg) {
-		if(!this.externalReceiver) {
-			fileReceiver.e(msg);
-		}
+		fileReceiver.e(msg);
 		
 		eCalled = true;
 	}
@@ -226,12 +218,17 @@ public class RemoteReceiver implements Receiver {
 				FileUtils.removeFile(fileReceiver.getCurrentFile().getAbsolutePath());
 				
 				prefs.edit().putString(ABSSOLUTE_PATH_KEY, null).commit();
+				prefs.edit().putString(UPLOAD_NAME_KEY, null).commit();
 				
 				Log.d(this.getClass().getSimpleName(), "Closed not sending files");
 			}
 			else {			
 				prefs.edit().putString(ABSSOLUTE_PATH_KEY, 
 						fileReceiver.getCurrentFile().getAbsolutePath()).commit();
+				prefs.edit().putString(UPLOAD_NAME_KEY, 
+						FileUtils.
+						getFilePath(fileReceiver.getCurrentFile()) 
+						+ File.separator + fileNameToUpload).commit();
 			}
 			
 			Log.d(this.getClass().getSimpleName(), "Closed");
@@ -243,35 +240,47 @@ public class RemoteReceiver implements Receiver {
 	
 	private void checkPreviousClose() {
 		
-		new Thread(new Runnable() {			
-			@Override
-			public void run() {
-				SharedPreferences prefs = context.
-						getSharedPreferences(SHARED_PREFS_PRIVATE_FILE, 
-								Context.MODE_PRIVATE);
-				String absolutePath = prefs.getString(ABSSOLUTE_PATH_KEY, null);
-				
-				if(absolutePath != null) {
-					File uploadFile = compress(absolutePath, true);		
+		final SharedPreferences prefs = context.
+				getSharedPreferences(SHARED_PREFS_PRIVATE_FILE, 
+						Context.MODE_PRIVATE);
+		final String absolutePath = prefs.getString(ABSSOLUTE_PATH_KEY, null);
+		final String uploadName = prefs.getString(UPLOAD_NAME_KEY, null);
+		
+		if(absolutePath != null && uploadName != null) {
+			
+			final File uploadFile = compress(absolutePath, uploadName, true);		
+			
+			Thread t = new Thread(new Runnable() {			
+				@Override
+				public void run() {				
 					
-					send(uploadFile);
+					boolean uploaded = send(uploadFile);
 			    		
 					prefs.edit().putString(ABSSOLUTE_PATH_KEY, null).commit();
+					prefs.edit().putString(UPLOAD_NAME_KEY, null).commit();
 					
 					// Delete the file of the receiver
 					if(uploadFile.delete()) {    		
 						Log.d(this.getClass().getSimpleName(), "Deleted temp file");
 					}										
 					
-					Log.d(this.getClass().getSimpleName(), "Sent file");
+					if(uploaded) {
+						Log.d(this.getClass().getSimpleName(), "Sent file");							
+					}
+					else {
+						Log.e(this.getClass().getSimpleName(), "Error sending file");
+					}
 				}
-								
-			}
-		}).start();		
+			});	
+			
+			t.start();
+		}	
 				
 	}
 	
-	private void send(File uploadFile) {		
+	private boolean send(File uploadFile) {
+		
+		boolean sended = false;
 		      
         try {
 
@@ -295,18 +304,20 @@ public class RemoteReceiver implements Receiver {
             	multipart.finish();
             }
             
+            sended = true;
+            
         }  
         catch (IOException e) {
         	Log.e(RemoteReceiver.class.getSimpleName(), e.toString());
         } 
+        
+        return sended;
 	        	        
 	}
 	
-	private File compress(String absolutePath, boolean removeUncompressed) {
+	private File compress(String absolutePath, String uploadName, boolean removeUncompressed) {
 		// Compress file on zip and delete them if removeUncompressed is true.
-		File zip = new File(FileUtils.
-				getFilePath(fileReceiver.getCurrentFile()) 
-				+ File.separator + fileNameToUpload);
+		File zip = new File(uploadName);
 		
 		ZipUtils.zip(zip, absolutePath, removeUncompressed);
 		

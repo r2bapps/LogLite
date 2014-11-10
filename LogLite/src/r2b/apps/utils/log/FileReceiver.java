@@ -46,10 +46,6 @@ import android.util.Log;
 
 /**
  * Buffered and thread-safe file logger.
- * 
- * With APPEND enabled you maintain all old logs 
- * on each close. With APPEND disabled you only 
- * maintain the current execution logs.
  */
 public class FileReceiver implements Receiver {
 	
@@ -61,10 +57,6 @@ public class FileReceiver implements Receiver {
 	 * Default dir name.
 	 */
 	private static final String DEFAULT_DIRECTORY_NAME = "LogLite";
-	/**
-	 * Flag to indicate to append info to the file. False to overwrite.
-	 */
-	private static boolean APPEND = true;
 	/**
 	 * Thread stick.
 	 */
@@ -100,7 +92,11 @@ public class FileReceiver implements Receiver {
 	/**
 	 * Flag to know if 'e' call was doing.
 	 */
-	private static boolean eCalled;	
+	private static boolean eCalled;
+	/**
+	 * Number of instances running.
+	 */
+	private static int instances = 0; 
 	/**
 	 * Flag to know if an 'e' call make to maintain logs.
 	 */
@@ -140,10 +136,15 @@ public class FileReceiver implements Receiver {
 		}
 	};
 	
-	public FileReceiver(final Context context, String fileName, boolean append, boolean storeOnlyOnError) {				
+	/**
+	 * Builder.
+	 * @param context Application context.
+	 * @param fileName The file to save.
+	 * @param storeOnlyOnError True to save only when error occurs, false otherwise.
+	 */
+	public FileReceiver(final Context context, String fileName, boolean storeOnlyOnError) {				
 		this.context = context.getApplicationContext();
 		this.fileName = fileName;
-		FileReceiver.APPEND = append;
 		this.storeOnlyOnError = storeOnlyOnError;
 		if(init()) {
 			Log.d(this.getClass().getSimpleName(), "Initialized");
@@ -248,19 +249,20 @@ public class FileReceiver implements Receiver {
 		    			replaceAllWithespacesAndNonVisibleCharacteres(fileName);	    	
 		    }
 		    
-		    fileName += FILE_EXTENSION;
+		    fileName += "_" + instances + FILE_EXTENSION;
+		    instances++; // Avoid multiple instances match the same name 
 		}
 		
 		currentFile = FileUtils.createInternalStorageFile(context, fileName);
 		
-		if( setupPrinter() ) {			
-			buffer = new StringBuilder();		
-			buffer.setLength(0);
-			stick = new Object();
-			
-			initialized = true;				
-		}
-		else if( FileUtils.isExternalStorageReady() ) {
+//		if( setupPrinter() ) {			
+//			buffer = new StringBuilder();		
+//			buffer.setLength(0);
+//			stick = new Object();
+//			
+//			initialized = true;				
+//		}
+//		else if( FileUtils.isExternalStorageReady() ) {
 			
 			String dirName = Utils.getApplicationName(context);
 		    if(dirName == null) {
@@ -285,10 +287,10 @@ public class FileReceiver implements Receiver {
 				initialized = true;				
 			}
 				
-		}		
-		else {
-			context = null;			
-		}
+//		}		
+//		else {
+//			context = null;			
+//		}
 				
 		return initialized;
 		
@@ -299,7 +301,7 @@ public class FileReceiver implements Receiver {
 		
 		if( currentFile != null) {
 			try {
-				FileWriter fw = new FileWriter (currentFile, APPEND);
+				FileWriter fw = new FileWriter (currentFile, false);
 				BufferedWriter bw = new BufferedWriter (fw);
 				printer = new PrintWriter( bw );
 				setup = true;

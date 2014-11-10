@@ -171,7 +171,7 @@ public final class Logger {
 	}
 	
 	/**
-	 * Send a INFO log message for performance notice.
+	 * Send a DEBUG log message for performance notice.
 	 * 
 	 * @param tag
 	 *            Used to identify the source of a log message. It usually
@@ -182,7 +182,7 @@ public final class Logger {
 	 *            The performance time in milliseconds you would like logged.
 	 */
 	public static final void performance(String tag, String method, long time) {
-		i("Performance:" + tag, method + ": " + String.valueOf(time) + " ms");		
+		d("Performance:" + tag, method + ": " + String.valueOf(time) + " ms");		
 	}	
 	
 	/**
