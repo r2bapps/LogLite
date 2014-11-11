@@ -9,19 +9,18 @@ Main functionality
 ------------------
 * Log to logcat.
 * Log to file asynchronously and thread-safe.
-* Log to remote asynchronously and thread-safe, with offline mode and compress info improvements.
-
-
-
-Description
-===========
-TODO
+* Log to remote asynchronously and thread-safe, with compress info improvements.
 
 
 
 Documentation
 =============
-TODO
+You have the [JavaDoc](LogLite/doc/javadoc) files on doc/javadoc directory, 
+and [UML](LogLite/doc/uml) diagrams on doc/uml directory.
+
+Class diagram
+-------------
+![Class diagram](LogLite/doc/uml/ClassDiagram.png?raw=true "Class diagram")
 
 
 
