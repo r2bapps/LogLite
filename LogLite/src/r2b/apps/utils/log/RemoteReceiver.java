@@ -124,6 +124,28 @@ public class RemoteReceiver implements Receiver {
 	 * Application context.
 	 */
 	private Context context;
+	/**
+	 * Singleton instance.
+	 */
+	private static RemoteReceiver INSTANCE;
+	
+	/**
+	 * Create a remote receiver to send log file to a server.
+	 *  
+	 * If you not use an existing receiver on each start you 
+	 * send the previous execution logs.
+	 * 
+	 * @param context Application context.
+	 * @param requestURL The server url to send files. 
+	 * (recommended), null create new one. 
+	 * @param sendOnlyOnError True send log only when 'e' is call. False always.
+	 */
+	public static RemoteReceiver getInstance(Context context, String requestURL, boolean sendOnlyOnError) {
+		if(INSTANCE == null) {
+			INSTANCE = new RemoteReceiver(context, requestURL, sendOnlyOnError);
+		}
+		return INSTANCE;
+	}
 	
 	/**
 	 * Create a remote receiver to send log file to a server.
@@ -137,15 +159,14 @@ public class RemoteReceiver implements Receiver {
 	 * @param sendOnlyOnError True send log only when 'e' is call. False always.
 	 */
 	@SuppressLint("SimpleDateFormat") 
-	public RemoteReceiver(Context context, String requestURL, boolean sendOnlyOnError) {
+	private RemoteReceiver(Context context, String requestURL, boolean sendOnlyOnError) {
 		this.requestURL = requestURL;	
 		this.sendOnlyOnError = sendOnlyOnError;
 		this.context = context.getApplicationContext();
 		
 	    
 	    // Checks if there are previous closed to send.
-	    checkPreviousClose();
-	    
+	    checkPreviousClose();	   
 	    
 		
 		String fileName = Utils.getApplicationName(context);
@@ -246,6 +267,7 @@ public class RemoteReceiver implements Receiver {
 			
 			context = null;
 			initialized = false;
+			INSTANCE = null;
 		}
 	}
 	

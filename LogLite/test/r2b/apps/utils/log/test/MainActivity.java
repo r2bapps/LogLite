@@ -193,7 +193,7 @@ public class MainActivity extends FragmentActivity {
 			
 			FileReceiver fileReceiver = new FileReceiver(getActivity(), null, true);
 			FileReceiver fileReceiver2 = new FileReceiver(getActivity(), "Test", true);
-			RemoteReceiver remoteReceiver = new RemoteReceiver(getActivity(), url, true);
+			RemoteReceiver remoteReceiver = RemoteReceiver.getInstance(getActivity(), url, true);
 					
 			
 			Receiver [] receivers = new Receiver[3];
