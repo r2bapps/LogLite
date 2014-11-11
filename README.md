@@ -13,12 +13,6 @@ Main functionality
 
 
 
-Description
-===========
-TODO
-
-
-
 Documentation
 =============
 You have the [JavaDoc](LogLite/doc/javadoc) files on doc/javadoc directory, 
