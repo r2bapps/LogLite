@@ -17,7 +17,7 @@ import android.widget.Toast;
 
 public class MainActivity extends FragmentActivity {
 
-	final static int SIZE = 100;
+	final static int SIZE = 10;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -189,11 +189,11 @@ public class MainActivity extends FragmentActivity {
 		public void onResume() {
 			super.onResume();
 			
-			String url = "http://192.168.0.195:8080/LogLiteUploadServer/UploadDownloadFileServlet/";
+			String url = "http://192.168.0.195:8080/LogLiteUploadServer/UploadDownloadFileServlet";
 			
-			FileReceiver fileReceiver = new FileReceiver(getActivity(), null, false);
-			FileReceiver fileReceiver2 = new FileReceiver(getActivity(), null, false);
-			RemoteReceiver remoteReceiver = new RemoteReceiver(getActivity(), url, false);
+			FileReceiver fileReceiver = new FileReceiver(getActivity(), null, true);
+			FileReceiver fileReceiver2 = new FileReceiver(getActivity(), "Test", true);
+			RemoteReceiver remoteReceiver = new RemoteReceiver(getActivity(), url, true);
 					
 			
 			Receiver [] receivers = new Receiver[3];
@@ -215,7 +215,7 @@ public class MainActivity extends FragmentActivity {
 			
 			t6.start();			
 			
-			t7.start();			
+			//t7.start();			
 
 		}
 

@@ -94,10 +94,6 @@ public class FileReceiver implements Receiver {
 	 */
 	private static boolean eCalled;
 	/**
-	 * Number of instances running.
-	 */
-	private static int instances = 0; 
-	/**
 	 * Flag to know if an 'e' call make to maintain logs.
 	 */
 	private boolean storeOnlyOnError;
@@ -249,8 +245,7 @@ public class FileReceiver implements Receiver {
 		    			replaceAllWithespacesAndNonVisibleCharacteres(fileName);	    	
 		    }
 		    
-		    fileName += "_" + instances + FILE_EXTENSION;
-		    instances++; // Avoid multiple instances match the same name 
+		    fileName += FILE_EXTENSION;
 		}
 		
 		currentFile = FileUtils.createInternalStorageFile(context, fileName);

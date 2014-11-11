@@ -186,6 +186,10 @@ public class MultipartEntity {
 				}
 				reader.close();
 				httpConn.disconnect();
+				
+				Log.d(this.getClass().getSimpleName(),
+						"Server returned status: " + status);
+				
 			} else {
 				Log.e(this.getClass().getSimpleName(),
 						"Server returned non-OK status: " + status);

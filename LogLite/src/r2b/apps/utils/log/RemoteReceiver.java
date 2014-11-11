@@ -85,9 +85,17 @@ public class RemoteReceiver implements Receiver {
 	 */
 	private static final String ZIP_FILE_EXTENSION = ".zip";	
 	/**
+	 * Log file extension.
+	 */
+	private static final String DEFAULT_FILE_EXTENSION = ".log";	
+	/**
 	 * Default file name.
 	 */
 	private static final String DEFAULT_FILE_NAME = "LogLite";
+	/**
+	 * Default file name prefix.
+	 */
+	private static final String DEFAULT_FILE_NAME_PREFIX = "Remote";	
 	/**
 	 * File receiver.
 	 */
@@ -134,6 +142,12 @@ public class RemoteReceiver implements Receiver {
 		this.sendOnlyOnError = sendOnlyOnError;
 		this.context = context.getApplicationContext();
 		
+	    
+	    // Checks if there are previous closed to send.
+	    checkPreviousClose();
+	    
+	    
+		
 		String fileName = Utils.getApplicationName(context);
 	    if(fileName == null) {
 	    	fileName = DEFAULT_FILE_NAME;
@@ -150,14 +164,11 @@ public class RemoteReceiver implements Receiver {
         		.getString(context.getApplicationContext().getContentResolver(), 
         				Settings.Secure.ANDROID_ID);
 	    
-	    this.fileNameToUpload = fileName + timestamp + id + ZIP_FILE_EXTENSION;
+	    this.fileNameToUpload = fileName + timestamp + id + ZIP_FILE_EXTENSION;	   
 	    
+	    String name = DEFAULT_FILE_NAME_PREFIX + "_" + fileName + DEFAULT_FILE_EXTENSION;	    
 	    
-	    // Checks if there are previous closed to send.
-	    checkPreviousClose();
-	    
-	    
-		this.fileReceiver = new FileReceiver(context, null, this.sendOnlyOnError);	
+		this.fileReceiver = new FileReceiver(context, name, this.sendOnlyOnError);	
 	    
 	    initialized = true;
 	    
